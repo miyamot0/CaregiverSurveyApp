@@ -59,7 +59,7 @@ namespace CaregiverSurveyApp.Pages
 
                 var contentSearchPaths = new List<string>()
                 {
-                    "Fonts",
+                    //"Fonts",
                     "Sounds",
                     "Images"
                 };
@@ -67,7 +67,6 @@ namespace CaregiverSurveyApp.Pages
                 gameView.ContentManager.SearchPaths = contentSearchPaths;
 
                 CCSprite.DefaultTexelToContentSizeRatio = 1.0f;
-
                 CCAudioEngine.SharedEngine.PreloadEffect("Sounds/Success");
 
                 StartScene mScene = new StartScene(gameView);
