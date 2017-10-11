@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Forms;
+using CaregiverSurveyApp.Views;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -252,6 +253,15 @@ namespace CaregiverSurveyApp.Layers
 
                                     return;
                                 }
+                                else
+                                {
+                                    Device.BeginInvokeOnMainThread(async () =>
+                                    {
+                                        await App.Current.MainPage.DisplayAlert("Wait time changed",
+                                            "Right now you have an immediate choice and a choice in " + Constants.delayStrings[delayIncrement],
+                                            "Okay");
+                                    });
+                                }
 
                                 valueIncrement = 0;
                                 SSRValue = 50;
@@ -315,6 +325,15 @@ namespace CaregiverSurveyApp.Layers
                                     SendData();
 
                                     return;
+                                }
+                                else
+                                {
+                                    Device.BeginInvokeOnMainThread(async () =>
+                                    {
+                                        await App.Current.MainPage.DisplayAlert("Wait time changed",
+                                            "Right now you have an immediate choice and a choice in " + Constants.delayStrings[delayIncrement],
+                                            "Okay");
+                                    });
                                 }
 
                                 valueIncrement = 0;
