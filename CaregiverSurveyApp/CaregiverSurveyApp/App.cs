@@ -11,6 +11,9 @@ namespace CaregiverSurveyApp
         public static string DeviceName = "DebugDevice";
         public static int Count = 0;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public App()
         {
             MainPage = new GamePage();

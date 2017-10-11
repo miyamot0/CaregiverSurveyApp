@@ -1,8 +1,5 @@
 ﻿using CocosSharp;
 using CaregiverSurveyApp.Layers;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CaregiverSurveyApp.Scenes
 {
@@ -11,6 +8,11 @@ namespace CaregiverSurveyApp.Scenes
         CCLayer assessmentLayer;
         public CCScene HomeScene { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="gameView"></param>
+        /// <param name="homeScene"></param>
         public AssessmentScene(CCGameView gameView, CCScene homeScene) : base(gameView)
         {
             HomeScene = homeScene;
@@ -19,6 +21,9 @@ namespace CaregiverSurveyApp.Scenes
             AddLayer(assessmentLayer);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void PopBackHome()
         {
             GameView.Director.PopScene(1.5f, new CCTransitionFade(1.5f, HomeScene));

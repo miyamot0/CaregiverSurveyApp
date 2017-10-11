@@ -2,11 +2,12 @@
 using CaregiverSurveyApp.Scenes;
 using CaregiverSurveyApp.Values;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CaregiverSurveyApp.Layers
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class DemoLayer : CCLayerColor
     {
         CCControlButton backControlButton;

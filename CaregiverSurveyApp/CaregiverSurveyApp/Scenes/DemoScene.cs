@@ -3,11 +3,19 @@ using CaregiverSurveyApp.Layers;
 
 namespace CaregiverSurveyApp.Scenes
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class DemoScene : CCScene
     {
         CCLayer demoLayer;
         public CCScene HomeScene { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="gameView"></param>
+        /// <param name="homeScene"></param>
         public DemoScene(CCGameView gameView, CCScene homeScene) : base(gameView)
         {
             HomeScene = homeScene;
@@ -16,6 +24,9 @@ namespace CaregiverSurveyApp.Scenes
             AddLayer(demoLayer);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void PopBackHome()
         {
             GameView.Director.PopScene(1.5f, new CCTransitionFade(1.5f, HomeScene));

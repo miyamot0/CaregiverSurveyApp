@@ -11,6 +11,9 @@ using Xamarin.Forms;
 
 namespace CaregiverSurveyApp.Layers
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class AssessmentLayer : CCLayerColor
     {
         CCControlButton backControlButton;
@@ -364,6 +367,10 @@ namespace CaregiverSurveyApp.Layers
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public Task<bool> SendDataToServer()
         {
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
@@ -422,6 +429,12 @@ namespace CaregiverSurveyApp.Layers
             return tcs.Task;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
         private static string ConstructResponse(string id, double[] values)
         {
             string temp;
@@ -452,6 +465,9 @@ namespace CaregiverSurveyApp.Layers
             return sb.ToString();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         async void SendData()
         {
             bool result = await SendDataToServer();

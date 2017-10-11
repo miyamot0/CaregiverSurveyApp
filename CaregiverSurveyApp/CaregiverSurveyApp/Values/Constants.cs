@@ -2,6 +2,9 @@
 
 namespace CaregiverSurveyApp.Values
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class Constants
     {
         public static CCColor3B lightBlue = new CCColor3B(222, 235, 247);
@@ -23,6 +26,9 @@ namespace CaregiverSurveyApp.Values
         public static string assessmentTextSsr = "I'd prefer to have {0}% less issues immediately.";
         public static string assessmentTextLlr = "I'd prefer to have 100% fewer issues in {0}";
 
+        /// <summary>
+        /// 
+        /// </summary>
         public static string[] delayStrings = 
         {
             "1 month",
@@ -34,6 +40,9 @@ namespace CaregiverSurveyApp.Values
             "20 years"
         };
 
+        /// <summary>
+        /// 
+        /// </summary>
         public enum SpriteTags
         {
             None = 0,

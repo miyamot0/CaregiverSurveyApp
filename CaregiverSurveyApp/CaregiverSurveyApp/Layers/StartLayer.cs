@@ -1,13 +1,11 @@
 ﻿using CocosSharp;
 using CaregiverSurveyApp.Scenes;
 using CaregiverSurveyApp.Values;
-using ModernHttpClient;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net.Http;
-using System.Text;
 using Xamarin.Forms;
+using CaregiverSurveyApp.Views;
+using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -26,6 +24,11 @@ namespace CaregiverSurveyApp.Layers
 
         private CCSpriteSheet spriteSheet;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
         public StartLayer(int width, int height) : base(CCColor4B.AliceBlue)
         {
             Color = Constants.midBlue;
@@ -72,7 +75,60 @@ namespace CaregiverSurveyApp.Layers
         /// <param name="e"></param>
         private void StatusControlButton_Clicked(object sender, EventArgs e)
         {
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                var action = await App.Current.MainPage.DisplayActionSheet("Edit Settings",
+                    "Cancel",
+                    null,
+                    "Edit Key",
+                    "Edit Server Address");
 
+                if (action != null)
+                {
+                    if (action == "Edit Key")
+                    {
+                        var result = await TextInputWindow("What is your key?");
+
+                        Debug.WriteLine(result);
+                    }
+                    else if (action == "Edit Server Address")
+                    {
+                        var result = await TextInputWindow("What is your server address?");
+
+                        Debug.WriteLine(result);
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// Await-able window for assigning icon label
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public Task<string> TextInputWindow(string query)
+        {
+            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                var popup = new PopUpWindow(query, string.Empty, "OK", "Cancel");
+                popup.PopupClosed += (o, closedArgs) =>
+                {
+                    if (closedArgs.Button == "OK" && closedArgs.Text.Trim().Length > 0)
+                    {
+                        tcs.SetResult(closedArgs.Text.Trim());
+                    }
+                    else
+                    {
+                        tcs.SetResult("");
+                    }
+                };
+
+                popup.Show();
+            });
+
+            return tcs.Task;
         }
 
         /// <summary>
@@ -84,7 +140,5 @@ namespace CaregiverSurveyApp.Layers
         {
             GameView.Director.PushScene(new CCTransitionFade(1.5f, new DemoScene(GameView, this.Scene)));
         }
-
-
     }
 }

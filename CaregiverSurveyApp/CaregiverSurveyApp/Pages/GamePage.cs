@@ -59,7 +59,6 @@ namespace CaregiverSurveyApp.Pages
 
                 var contentSearchPaths = new List<string>()
                 {
-                    //"Fonts",
                     "Sounds",
                     "Images"
                 };

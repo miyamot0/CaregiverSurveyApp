@@ -1,14 +1,18 @@
 ﻿using CocosSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CaregiverSurveyApp.Scenes
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public class TestScene : CCScene
     {
         CCDrawNode circle;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="gameView"></param>
         public TestScene(CCGameView gameView) : base(gameView)
         {
             var layer = new CCLayer();
