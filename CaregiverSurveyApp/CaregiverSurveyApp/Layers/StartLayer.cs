@@ -77,27 +77,10 @@ namespace CaregiverSurveyApp.Layers
         {
             Device.BeginInvokeOnMainThread(async () =>
             {
-                var action = await App.Current.MainPage.DisplayActionSheet("Edit Settings",
-                    "Cancel",
-                    null,
-                    "Edit Key",
-                    "Edit Server Address");
+                var result = await TextInputWindow("What are your credentials?");
 
-                if (action != null)
-                {
-                    if (action == "Edit Key")
-                    {
-                        var result = await TextInputWindow("What is your key?");
+                Debug.WriteLine(result);
 
-                        Debug.WriteLine(result);
-                    }
-                    else if (action == "Edit Server Address")
-                    {
-                        var result = await TextInputWindow("What is your server address?");
-
-                        Debug.WriteLine(result);
-                    }
-                }
             });
         }
 
@@ -106,9 +89,9 @@ namespace CaregiverSurveyApp.Layers
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
-        public Task<string> TextInputWindow(string query)
+        public Task<string[]> TextInputWindow(string query)
         {
-            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+            TaskCompletionSource<string[]> tcs = new TaskCompletionSource<string[]>();
 
             Device.BeginInvokeOnMainThread(() =>
             {
@@ -117,11 +100,11 @@ namespace CaregiverSurveyApp.Layers
                 {
                     if (closedArgs.Button == "OK" && closedArgs.Text.Trim().Length > 0)
                     {
-                        tcs.SetResult(closedArgs.Text.Trim());
+                        tcs.SetResult(new string[] { closedArgs.Text.Trim(), closedArgs.Text2.Trim() });
                     }
                     else
                     {
-                        tcs.SetResult("");
+                        tcs.SetResult(new string[] { "", "" });
                     }
                 };
 

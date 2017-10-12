@@ -12,6 +12,7 @@ namespace CaregiverSurveyApp.Views
     public class PopUpWindowArgs : EventArgs
     {
         public string Text { get; set; }
+        public string Text2 { get; set; }
         public string Button { get; set; }
     }
 
@@ -20,8 +21,9 @@ namespace CaregiverSurveyApp.Views
     /// </summary>
     public class PopUpWindow
     {
-        public string Text { get; set; }
         public string Title { get; set; }
+        public string Text { get; set; }
+        public string Text2 { get; set; }
         public List<string> Buttons { get; set; }
 
         /// <summary>
