@@ -5,7 +5,6 @@ using System;
 using Xamarin.Forms;
 using CaregiverSurveyApp.Views;
 using System.Threading.Tasks;
-using System.Diagnostics;
 using Xamarin.Auth;
 using System.Linq;
 
@@ -169,9 +168,9 @@ namespace CaregiverSurveyApp.Layers
 
             if (account != null)
             {
-                if (String.IsNullOrWhiteSpace(account.Properties["Key"]) || 
-                    String.IsNullOrWhiteSpace(account.Properties["Server"]) ||
-                    String.IsNullOrWhiteSpace(account.Properties["DeviceName"]))
+                if (string.IsNullOrWhiteSpace(account.Properties["Key"]) ||
+                    string.IsNullOrWhiteSpace(account.Properties["Server"]) ||
+                    string.IsNullOrWhiteSpace(account.Properties["DeviceName"]))
                 {
                     Device.BeginInvokeOnMainThread(async () =>
                     {
@@ -196,6 +195,11 @@ namespace CaregiverSurveyApp.Layers
                     await App.Current.MainPage.DisplayAlert("Error", "No credentials found", "Cancel");
                 });                
             }
+        }
+
+        private void CheckCredentials()
+        {
+
         }
     }
 }
