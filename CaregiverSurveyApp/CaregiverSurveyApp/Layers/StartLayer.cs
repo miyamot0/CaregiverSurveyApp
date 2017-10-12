@@ -7,6 +7,8 @@ using CaregiverSurveyApp.Views;
 using System.Threading.Tasks;
 using Xamarin.Auth;
 using System.Linq;
+using System.Collections.Generic;
+using ITLec.XamarinForms.Tool.AdvancedProgressBar;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -195,11 +197,6 @@ namespace CaregiverSurveyApp.Layers
                     await App.Current.MainPage.DisplayAlert("Error", "No credentials found", "Cancel");
                 });                
             }
-        }
-
-        private void CheckCredentials()
-        {
-
         }
     }
 }
