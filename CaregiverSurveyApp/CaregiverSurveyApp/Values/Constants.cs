@@ -41,9 +41,11 @@ namespace CaregiverSurveyApp.Values
         public static int hOffset = 10;
         public static int vOffset = 10;
 
-        public static string demoInstruction = "The purpose of this application is find out what type of things that caregivers are motivated by. " +
-            "For example, some are looking to make things perfect in the long-term and others are more motivated by smaller differences right away. " + 
-            "In this program, we ask that you make choices by dragging options you’d prefer into the bottom portion of the screen. For practice, please put the choice you want in the box below.";
+        public static string demoInstruction = "You're being asked about the types of therapy outcomes that most motivate you. " +
+            "These questions are focused on learning how to better match therapy to what caregivers want. " + 
+            "For example, some cargivers are more focused on the larger, long-term improvements and some are looking for more immediate effects, even if the differences is only small. " + 
+            "In this task, we ask that you make choices by dragging the option you would rather into the bottom portion of the screen. " +
+            "To practice this, please put the choice you want into the bottom box below.";
 
         public static string demoTextSsr = "Choice I Want";
         public static string demoTextLlr = "Choice I Do notWant";
@@ -87,5 +89,7 @@ namespace CaregiverSurveyApp.Values
         public static float LabelTitleSize = 72f;
 
         public static float TextReadingSize = 26f;
+
+        public static float InstructionTextSize = 34f;
     }
 }

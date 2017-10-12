@@ -29,6 +29,7 @@ using CocosSharp;
 using CaregiverSurveyApp.Scenes;
 using CaregiverSurveyApp.Values;
 using System;
+using Xamarin.Forms;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -124,7 +125,7 @@ namespace CaregiverSurveyApp.Layers
             AddChild(bottomContainer, 0, (int)Constants.SpriteTags.None);
 
             // Instructions
-            instructionLabel = new CCLabel(Constants.demoInstruction, Constants.LabelFont, 26, CCLabelFormat.SystemFont);
+            instructionLabel = new CCLabel(Constants.demoInstruction, Constants.LabelFont, Constants.InstructionTextSize, CCLabelFormat.SystemFont);
             instructionLabel.Color = CCColor3B.Black;
             instructionLabel.Dimensions = new CCSize(width - Constants.hOffset * 2, height / 4);
             instructionLabel.ContentSize = new CCSize(width - Constants.hOffset * 2, height / 4);
@@ -210,7 +211,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Active interaction listener
         /// </summary>
         /// <param name="touch"></param>
         /// <param name="touchEvent"></param>
@@ -229,12 +230,16 @@ namespace CaregiverSurveyApp.Layers
                     CurrentSpriteTouched = ssrCard;
                     CurrentSpriteType = caller.Tag;
 
+                    CurrentSpriteTouched.Opacity = 100;
+
                     return true;
                 }
                 else if (caller.Tag == (int)Constants.SpriteTags.LLR && llrCard.BoundingBoxTransformedToWorld.ContainsPoint(touch.Location))
                 {
                     CurrentSpriteTouched = llrCard;
                     CurrentSpriteType = caller.Tag;
+
+                    CurrentSpriteTouched.Opacity = 100;
 
                     return true;
                 }
@@ -247,12 +252,21 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Active interaction (end) listener
         /// </summary>
         /// <param name="touch"></param>
         /// <param name="touchEvent"></param>
         void OnTouchesEnded(CCTouch touch, CCEvent touchEvent)
         {
+            if (CurrentSpriteTouched != null)
+            {
+                CurrentSpriteTouched.Opacity = 255;
+
+                // In case both were activated
+                ssrCard.Opacity = 255;
+                llrCard.Opacity = 255;
+            }
+
             if (CurrentSpriteTouched != null && CheckIfInDropBox(CurrentSpriteTouched))
             {
                 if (CurrentSpriteTouched.Tag == (int)Constants.SpriteTags.SSR)
@@ -307,9 +321,9 @@ namespace CaregiverSurveyApp.Layers
                 }
             }
         }
-
+        
         /// <summary>
-        /// 
+        /// Prepare materials for the following trial
         /// </summary>
         void PrepForNextTrial()
         {
@@ -319,6 +333,13 @@ namespace CaregiverSurveyApp.Layers
             {
                 AddActions(false, new CCSequence(
                     new CCDelayTime(2f),
+                    new CCCallFuncO((dt) => 
+                    {
+                        Device.BeginInvokeOnMainThread(async () =>
+                        {
+                            await App.Current.MainPage.DisplayAlert("Practice Tests Complete", "In the next part, you will be asked to choose between one outcome right away and another that would come later", "I'm Ready");
+                        });
+                    }, GameView),
                     new CCCallFuncO((dt) =>
                     {
                         GameView.Director.ReplaceScene(new CCTransitionFade(1.5f, new AssessmentScene(GameView, (Scene as DemoScene).HomeScene)));
