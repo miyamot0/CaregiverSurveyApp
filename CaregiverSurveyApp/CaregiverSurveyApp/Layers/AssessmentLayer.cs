@@ -35,7 +35,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Forms;
-using CaregiverSurveyApp.Views;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -234,12 +233,16 @@ namespace CaregiverSurveyApp.Layers
                     CurrentSpriteTouched = ssrCard;
                     CurrentSpriteType = caller.Tag;
 
+                    CurrentSpriteTouched.Opacity = 100;
+
                     return true;
                 }
                 else if (caller.Tag == (int)Constants.SpriteTags.LLR && llrCard.BoundingBoxTransformedToWorld.ContainsPoint(touch.Location))
                 {
                     CurrentSpriteTouched = llrCard;
                     CurrentSpriteType = caller.Tag;
+
+                    CurrentSpriteTouched.Opacity = 100;
 
                     return true;
                 }
@@ -258,6 +261,14 @@ namespace CaregiverSurveyApp.Layers
         /// <param name="touchEvent"></param>
         void OnTouchesEnded(CCTouch touch, CCEvent touchEvent)
         {
+            if (CurrentSpriteTouched != null)
+            {
+                CurrentSpriteTouched.Opacity = 255;
+
+                ssrCard.Opacity = 255;
+                llrCard.Opacity = 255;
+            }
+
             if (CurrentSpriteTouched != null && CheckIfInDropBox(CurrentSpriteTouched))
             {
                 if (CurrentSpriteTouched.Tag == (int)Constants.SpriteTags.SSR)
