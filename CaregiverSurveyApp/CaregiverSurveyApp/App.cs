@@ -26,17 +26,41 @@
 //----------------------------------------------------------------------------------------------
 
 using CaregiverSurveyApp.Pages;
+using Plugin.Settings;
+using Plugin.Settings.Abstractions;
 using Xamarin.Forms;
 
 namespace CaregiverSurveyApp
 {
     public class App : Application
     {
+        private static ISettings AppSettings
+        {
+            get
+            {
+                return CrossSettings.Current;
+            }
+        }
+
+        private const string IteratorKey = "iteration_count";
+        private static readonly int IteratorDefault = 0;
+
+        public static int SubmissionCounter
+        {
+            get
+            {
+                return AppSettings.GetValueOrDefault(IteratorKey, IteratorDefault);
+            }
+            set
+            {
+                AppSettings.AddOrUpdateValue(IteratorKey, value);
+            }
+        }
+
         public static string AppName = "com.smallnstats.caregiversurveyapp";
         public static string Token = "";
         public static string ApiAddress = "";
-        public static string DeviceName = "DebugDevice";
-        public static int Count = 0;
+        public static string DeviceName = "";
 
         /// <summary>
         /// 

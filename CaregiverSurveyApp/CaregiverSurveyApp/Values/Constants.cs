@@ -60,6 +60,7 @@ namespace CaregiverSurveyApp.Values
         /// </summary>
         public static string[] delayStrings = 
         {
+            "1 week",
             "1 month",
             "3 months",
             "9 months",

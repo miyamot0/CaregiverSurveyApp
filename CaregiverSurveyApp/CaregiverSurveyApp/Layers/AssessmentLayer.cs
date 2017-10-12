@@ -35,6 +35,8 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Forms;
+using Acr.UserDialogs;
+using System.Diagnostics;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -60,6 +62,8 @@ namespace CaregiverSurveyApp.Layers
         CCSpriteSheet spriteSheet;
 
         CCEventListenerTouchOneByOne mListener;
+
+        double[] sendArray = new double[8];
 
         int Width,
             Height,
@@ -214,7 +218,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Listener for active touch events
         /// </summary>
         /// <param name="touch"></param>
         /// <param name="touchEvent"></param>
@@ -255,7 +259,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Listener for active touch events (end)
         /// </summary>
         /// <param name="touch"></param>
         /// <param name="touchEvent"></param>
@@ -283,6 +287,8 @@ namespace CaregiverSurveyApp.Layers
                             // Update delay
                             if (valueIncrement >= 4)
                             {
+                                sendArray[delayIncrement] = SSRValue - (priorAdjustment / 2);
+
                                 delayIncrement++;
 
                                 if (delayIncrement >= Constants.delayStrings.Length)
@@ -295,7 +301,7 @@ namespace CaregiverSurveyApp.Layers
                                 {
                                     Device.BeginInvokeOnMainThread(async () =>
                                     {
-                                        await App.Current.MainPage.DisplayAlert("Wait time changed",
+                                        await App.Current.MainPage.DisplayAlert("The Wait Time Has Changed",
                                             "Right now you have an immediate choice and a choice in " + Constants.delayStrings[delayIncrement],
                                             "Okay");
                                     });
@@ -353,9 +359,11 @@ namespace CaregiverSurveyApp.Layers
 
                             CCLabel mContent;
 
-                            // Update delay
+                            // Has responded 5x at this delay, advance or submit
                             if (valueIncrement >= 4)
                             {
+                                sendArray[delayIncrement] = SSRValue + (priorAdjustment / 2);
+
                                 delayIncrement++;
 
                                 if (delayIncrement >= Constants.delayStrings.Length)
@@ -398,7 +406,7 @@ namespace CaregiverSurveyApp.Layers
                                 valueIncrement++;
                                 priorAdjustment = LLRValue / 2;
 
-                                SSRValue = LLRValue + priorAdjustment;
+                                SSRValue = SSRValue + priorAdjustment;
 
                                 SSRValue = (SSRValue > 100) ? 100 : SSRValue;
 
@@ -439,13 +447,11 @@ namespace CaregiverSurveyApp.Layers
                     var httpClient = new HttpClient(new NativeMessageHandler(
                         throwOnCaptiveNetwork: true,
                         customSSLVerification: true
-                    ));
+                    ));                                     
 
-                    var mId = String.Format("{0}-{1}",
+                    var mId = string.Format("{0}-{1}",
                         App.DeviceName,
-                        App.Count.ToString("0000000000"));
-
-                    double[] values = { 100, 80, 70, 50, 40, 20, 10, 5 };
+                        App.SubmissionCounter.ToString("0000000000"));
 
                     var parameters = new Dictionary<string, string>
                     {
@@ -454,7 +460,7 @@ namespace CaregiverSurveyApp.Layers
                         { "format", "xml" },
                         { "type", "flat"},
                         { "overwriteBehavior", "normal" },
-                        { "data", ConstructResponse(mId, values) },
+                        { "data", ConstructResponse(mId, sendArray) },
                         { "returnContent", "count" },
                         { "returnFormat", "json" }
                     };
@@ -465,21 +471,18 @@ namespace CaregiverSurveyApp.Layers
 
                     if (resp.IsSuccessStatusCode)
                     {
+                        App.SubmissionCounter = App.SubmissionCounter + 1;
+
                         tcs.SetResult(true);
-                        //var json = await resp.Content.ReadAsStringAsync();
-                        //Debug.WriteLine(json);
                     }
                     else
                     {
                         tcs.SetResult(false);
-                        //Debug.WriteLine("Failed");
                     }
                 }
                 catch
                 {
                     tcs.SetResult(false);
-                    //Debug.WriteLine(exception);
-                    //Debug.WriteLine("Cert Challenge did not hold up");
                 }
             });
 
@@ -523,79 +526,59 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Upload task to REDcap
         /// </summary>
-        async void SendData()
+        /// <returns></returns>
+        private Task<bool> UploadData()
         {
-            bool result = await SendDataToServer();
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
-            if (result && GameView.Director.CanPopScene)
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                using (var progress = UserDialogs.Instance.Loading("Saving data ...", null, null, true, MaskType.Black))
+                {
+                    bool result = await SendDataToServer();
+
+                    // Double check for sending
+                    if (!result)
+                    {
+                        result = await SendDataToServer();
+                    }
+
+                    // Triple check for sending
+                    if (!result)
+                    {
+                        result = await SendDataToServer();
+                    }
+
+                    await Task.Delay(2000);
+
+                    tcs.SetResult(result);
+                }
+            });
+
+
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Send data, return back to thread
+        /// </summary>
+        private async void SendData()
+        {
+            bool finalResult = await UploadData();
+
+            if (finalResult && GameView.Director.CanPopScene)
             {
                 if ((Scene as AssessmentScene) != null)
                 {
                     (Scene as AssessmentScene).PopBackHome();
                 }
             }
-
-            /*
-            Device.BeginInvokeOnMainThread(async () =>
+            else
             {
-                //var answer = await App.Current.MainPage.DisplayAlert("Question?", "Would you like to play a game", "Yes", "No");
-                //Debug.WriteLine("Answer: " + answer);
-
-                try
-                {
-                    var deviceName = "debug";
-                    var count = 0;
-
-
-
-                    var httpClient = new HttpClient(new NativeMessageHandler(
-                        throwOnCaptiveNetwork: true,
-                        customSSLVerification: true
-                    ));
-
-                    var mId = String.Format("{0}-{1}",
-                        deviceName,
-                        count.ToString("0000000000"));
-
-                    double[] values = { 100, 80, 70, 50, 40, 20, 10, 5 };
-
-                    var parameters = new Dictionary<string, string>
-                    {
-                        { "token", App.Token },
-                        { "content", "record"},
-                        { "format", "xml" },
-                        { "type", "flat"},
-                        { "overwriteBehavior", "normal" },
-                        { "data", ConstructResponse(mId, values) },
-                        { "returnContent", "count" },
-                        { "returnFormat", "json" }
-                    };
-
-                    var encodedContent = new FormUrlEncodedContent(parameters);
-
-                    var resp = await httpClient.PostAsync(new Uri(App.ApiAddress), encodedContent);
-
-                    if (resp.IsSuccessStatusCode)
-                    {
-                        var json = await resp.Content.ReadAsStringAsync();
-                        Debug.WriteLine(json);
-
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Failed");
-
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Debug.WriteLine(exception);
-                    //Debug.WriteLine("Cert Challenge did not hold up");
-                }
-            });
-            */
+                Debug.WriteLine("Failed");
+            }
         }
 
         /// <summary>
@@ -645,25 +628,7 @@ namespace CaregiverSurveyApp.Layers
                     Height - CurrentSpriteTouched.ContentSize.Height / 2 :
                     pos.Y;
 
-                CurrentSpriteTouched.Position = pos;
-
-                /*
-                if (CheckIfInDropBox(CurrentSpriteTouched))
-                {
-                    if (CurrentSpriteTouched.Tag == (int)Constants.SpriteTags.SSR)
-                    {
-                        CurrentSpriteTouched.Color = CCColor3B.Green;
-                    }
-                    else if (CurrentSpriteTouched.Tag == (int)Constants.SpriteTags.LLR)
-                    {
-                        CurrentSpriteTouched.Color = CCColor3B.Red;
-                    }
-                }
-                else
-                {
-                    CurrentSpriteTouched.Color = CCColor3B.White;
-                }
-                */
+                CurrentSpriteTouched.Position = pos;                
             }
         }
 
