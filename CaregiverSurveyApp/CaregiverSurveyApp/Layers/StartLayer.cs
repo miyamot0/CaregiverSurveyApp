@@ -86,6 +86,8 @@ namespace CaregiverSurveyApp.Layers
             {
                 var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
 
+                string id = Guid.NewGuid().ToString();
+
                 if (account != null)
                 {
                     var action = await App.Current.MainPage.DisplayActionSheet("Existing credentials found", "Cancel", null, "Modify Credentials", "Delete Credentials");
@@ -96,7 +98,7 @@ namespace CaregiverSurveyApp.Layers
 
                         var result = await TextInputWindow("What are your credentials?");
 
-                        SaveCredentials(result[0], result[1]);
+                        SaveCredentials(result[0], result[1], id);
                     }
                     else if (action != null && action == "Delete Credentials")
                     {
@@ -107,9 +109,8 @@ namespace CaregiverSurveyApp.Layers
                 {
                     var result = await TextInputWindow("What are your credentials?");
 
-                    SaveCredentials(result[0], result[1]);
+                    SaveCredentials(result[0], result[1], id);
                 }
-
             });
         }
 
@@ -118,18 +119,31 @@ namespace CaregiverSurveyApp.Layers
         /// </summary>
         /// <param name="Server"></param>
         /// <param name="Key"></param>
-        private void SaveCredentials(string Server, string Key)
+        private async void SaveCredentials(string Server, string Key, string Id)
         {
             if (!string.IsNullOrWhiteSpace(Server) && !string.IsNullOrWhiteSpace(Key))
             {
-                Account account = new Account
+                string ans = await ValidateSuppliedCredentials(Server, Key, Id);
+
+                Debug.WriteLine(ans);
+
+                if (ValidateResponseString(ans))
                 {
-                    Username = App.AppName
-                };
-                account.Properties.Add("Server", Server);
-                account.Properties.Add("Key", Key);
-                account.Properties.Add("DeviceName", Guid.NewGuid().ToString());
-                AccountStore.Create().Save(account, App.AppName);
+                    Account account = new Account
+                    {
+                        Username = App.AppName
+                    };
+                    account.Properties.Add("Server", Server);
+                    account.Properties.Add("Key", Key);
+                    account.Properties.Add("DeviceName", Id);
+                    AccountStore.Create().Save(account, App.AppName);
+
+                    await App.Current.MainPage.DisplayAlert("Credentials accepted", "Credentials are stored and ready", "Close");
+                }
+                else
+                {
+                    await App.Current.MainPage.DisplayAlert("Incorrect credentials", "Credentials were not correct", "Close");
+                }
             }
         }
 
@@ -167,11 +181,11 @@ namespace CaregiverSurveyApp.Layers
         /// 
         /// </summary>
         /// <returns></returns>
-        public async Task<string> ValidateSuppliedCredentials()
+        public async Task<string> ValidateSuppliedCredentials(string _address, string _key, string _id)
         {
             Device.BeginInvokeOnMainThread(() => UserDialogs.Instance.ShowLoading("Checking credentials ...", MaskType.Black));
 
-            string result = await await TestServerCredentials()
+            string result = await await TestServerCredentials(_address, _key, _id)
                 .ContinueWith(async t => await CloseUserDialog(t.Result));
 
             return result;
@@ -200,7 +214,7 @@ namespace CaregiverSurveyApp.Layers
         /// 
         /// </summary>
         /// <returns></returns>
-        public async Task<string> TestServerCredentials()
+        public async Task<string> TestServerCredentials(string _address, string _key, string _id)
         {
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
@@ -212,14 +226,14 @@ namespace CaregiverSurveyApp.Layers
                 ));
 
                 var mId = String.Format("{0}-{1}",
-                    App.DeviceName,
+                    _id,
                     "TestWrite");
 
                 double[] values = { -1, -1, -1, -1, -1, -1, -1, -1 };
 
                 var parameters = new Dictionary<string, string>
                         {
-                            { "token", App.Token },
+                            { "token", _key },
                             { "content", "record"},
                             { "format", "xml" },
                             { "type", "flat"},
@@ -231,7 +245,7 @@ namespace CaregiverSurveyApp.Layers
 
                 var encodedContent = new FormUrlEncodedContent(parameters);
 
-                var resp = await httpClient.PostAsync(new Uri(App.ApiAddress), encodedContent);
+                var resp = await httpClient.PostAsync(new Uri(_address), encodedContent);
 
                 string returnStatment = "";
 
@@ -288,6 +302,11 @@ namespace CaregiverSurveyApp.Layers
             return sb.ToString();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="resp"></param>
+        /// <returns></returns>
         private bool ValidateResponseString(string resp)
         {
             return (resp.Trim().Equals("{\"count\": 1}"));
@@ -300,12 +319,6 @@ namespace CaregiverSurveyApp.Layers
         /// <param name="e"></param>
         private async void StartControlButton_Clicked(object sender, EventArgs e)
         {
-            string ans = await ValidateSuppliedCredentials();
-
-            Debug.WriteLine(ValidateResponseString(ans));
-
-            return;
-
             var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
 
             if (account != null)
