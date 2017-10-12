@@ -95,7 +95,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Awaitable call to update the text
         /// </summary>
         private async void UpdateStatus()
         {
@@ -105,7 +105,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Update label based on server response
         /// </summary>
         /// <param name="text"></param>
         private void UpdateLabelText(string text)
@@ -121,7 +121,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Submit credentials to observe response
         /// </summary>
         /// <returns></returns>
         private Task<string> ChallengeCredentials()
@@ -167,10 +167,23 @@ namespace CaregiverSurveyApp.Layers
                         tcs.SetResult("Status: No Credentials Found.");
                     }
                 }
-                //UserDialogs.Instance.ShowLoading("Checking credentials ...", MaskType.Black);
             });
 
             return tcs.Task;
+        }
+        
+        /// <summary>
+        /// Challenge specific credentials
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> ChallengeCredentials(string _address, string _key, string _id)
+        {
+            Device.BeginInvokeOnMainThread(() => UserDialogs.Instance.ShowLoading("Checking credentials ...", MaskType.Black));
+
+            string result = await await TestServerCredentials(_address, _key, _id)
+                .ContinueWith(async t => await CloseUserDialog(t.Result));
+
+            return result;
         }
 
         /// <summary>
@@ -197,52 +210,9 @@ namespace CaregiverSurveyApp.Layers
 
             return false;
         }
-
+        
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void StatusControlButton_Clicked(object sender, EventArgs e)
-        {
-            Device.BeginInvokeOnMainThread(async () =>
-            {
-                var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
-
-                string id = Guid.NewGuid().ToString();
-
-                if (account != null)
-                {
-                    var action = await App.Current.MainPage.DisplayActionSheet("Existing credentials found", "Cancel", null, "Modify Credentials", "Delete Credentials");
-
-                    if (action != null && action == "Modify Credentials")
-                    {
-                        AccountStore.Create().Delete(account, App.AppName);
-
-                        var result = await TextInputWindow("What are your credentials?");
-
-                        SaveCredentials(result[0], result[1], id);
-
-                        UpdateLabelText(await ChallengeCredentials());
-                    }
-                    else if (action != null && action == "Delete Credentials")
-                    {
-                        AccountStore.Create().Delete(account, App.AppName);
-
-                        UpdateLabelText("Status: Credentials Deleted");
-                    }
-                }
-                else
-                {
-                    var result = await TextInputWindow("What are your credentials?");
-
-                    SaveCredentials(result[0], result[1], id);
-                }
-            });
-        }
-
-        /// <summary>
-        /// 
+        /// Save credentials if appropriate
         /// </summary>
         /// <param name="Server"></param>
         /// <param name="Key"></param>
@@ -250,7 +220,7 @@ namespace CaregiverSurveyApp.Layers
         {
             if (!string.IsNullOrWhiteSpace(Server) && !string.IsNullOrWhiteSpace(Key))
             {
-                string ans = await ValidateSuppliedCredentials(Server, Key, Id);
+                string ans = await ChallengeCredentials(Server, Key, Id);
 
                 if (ValidateResponseString(ans))
                 {
@@ -309,20 +279,6 @@ namespace CaregiverSurveyApp.Layers
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        public async Task<string> ValidateSuppliedCredentials(string _address, string _key, string _id)
-        {
-            Device.BeginInvokeOnMainThread(() => UserDialogs.Instance.ShowLoading("Checking credentials ...", MaskType.Black));
-
-            string result = await await TestServerCredentials(_address, _key, _id)
-                .ContinueWith(async t => await CloseUserDialog(t.Result));
-
-            return result;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="b"></param>
         /// <returns></returns>
         public Task<string> CloseUserDialog(string b)
@@ -349,6 +305,8 @@ namespace CaregiverSurveyApp.Layers
 
             try
             {
+                // Throw if MITM over captive net
+                // Throw if SSL issue
                 var httpClient = new HttpClient(new NativeMessageHandler(
                     throwOnCaptiveNetwork: true,
                     customSSLVerification: true
@@ -446,35 +404,60 @@ namespace CaregiverSurveyApp.Layers
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StartControlButton_Clicked(object sender, EventArgs e)
+        private void StatusControlButton_Clicked(object sender, EventArgs e)
         {
-            var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
-
-            if (account != null)
+            Device.BeginInvokeOnMainThread(async () =>
             {
-                if (CheckAccountContent())
-                {                
-                    Device.BeginInvokeOnMainThread(async () =>
-                    {
-                        await App.Current.MainPage.DisplayAlert("Error", "Invalid credentials found", "Cancel");
-                    });
+                var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
 
-                    return;
+                string id = Guid.NewGuid().ToString();
+
+                if (account != null)
+                {
+                    var action = await App.Current.MainPage.DisplayActionSheet("Existing credentials found", "Cancel", null, "Modify Credentials", "Delete Credentials");
+
+                    if (action != null && action == "Modify Credentials")
+                    {
+                        AccountStore.Create().Delete(account, App.AppName);
+
+                        var result = await TextInputWindow("What are your credentials?");
+
+                        SaveCredentials(result[0], result[1], id);
+
+                        UpdateLabelText(await ChallengeCredentials());
+                    }
+                    else if (action != null && action == "Delete Credentials")
+                    {
+                        AccountStore.Create().Delete(account, App.AppName);
+
+                        UpdateLabelText("Status: Credentials Deleted");
+                    }
                 }
                 else
                 {
-                    App.Token = account.Properties["Key"];
-                    App.ApiAddress = account.Properties["Server"];
-                    App.DeviceName = account.Properties["DeviceName"];
+                    var result = await TextInputWindow("What are your credentials?");
 
-                    GameView.Director.PushScene(new CCTransitionFade(1.5f, new DemoScene(GameView, this.Scene)));
+                    SaveCredentials(result[0], result[1], id);
                 }
+            });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StartControlButton_Clicked(object sender, EventArgs e)
+        {
+            if (Ready)
+            {
+                GameView.Director.PushScene(new CCTransitionFade(1.5f, new DemoScene(GameView, this.Scene)));
             }
             else
             {
                 Device.BeginInvokeOnMainThread(async () =>
                 {
-                    await App.Current.MainPage.DisplayAlert("Error", "No credentials found", "Cancel");
+                    await App.Current.MainPage.DisplayAlert("Error", "Not fully set initialized yet.", "OK");
                 });
             }
         }
