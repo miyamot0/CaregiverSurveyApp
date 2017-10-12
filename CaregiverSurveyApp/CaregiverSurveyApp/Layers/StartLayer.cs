@@ -7,8 +7,12 @@ using CaregiverSurveyApp.Views;
 using System.Threading.Tasks;
 using Xamarin.Auth;
 using System.Linq;
+using Acr.UserDialogs;
+using System.Net.Http;
+using ModernHttpClient;
 using System.Collections.Generic;
-using ITLec.XamarinForms.Tool.AdvancedProgressBar;
+using System.Diagnostics;
+using System.Text;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -85,7 +89,7 @@ namespace CaregiverSurveyApp.Layers
                 if (account != null)
                 {
                     var action = await App.Current.MainPage.DisplayActionSheet("Existing credentials found", "Cancel", null, "Modify Credentials", "Delete Credentials");
-                    
+
                     if (action != null && action == "Modify Credentials")
                     {
                         AccountStore.Create().Delete(account, App.AppName);
@@ -162,10 +166,146 @@ namespace CaregiverSurveyApp.Layers
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public async Task<string> ValidateSuppliedCredentials()
+        {
+            Device.BeginInvokeOnMainThread(() => UserDialogs.Instance.ShowLoading("Checking credentials ...", MaskType.Black));
+
+            string result = await await TestServerCredentials()
+                .ContinueWith(async t => await CloseUserDialog(t.Result));
+
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public Task<string> CloseUserDialog(string b)
+        {
+            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                UserDialogs.Instance.HideLoading();
+
+                tcs.SetResult(b);
+            });
+
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> TestServerCredentials()
+        {
+            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+
+            try
+            {
+                var httpClient = new HttpClient(new NativeMessageHandler(
+                    throwOnCaptiveNetwork: true,
+                    customSSLVerification: true
+                ));
+
+                var mId = String.Format("{0}-{1}",
+                    App.DeviceName,
+                    "TestWrite");
+
+                double[] values = { -1, -1, -1, -1, -1, -1, -1, -1 };
+
+                var parameters = new Dictionary<string, string>
+                        {
+                            { "token", App.Token },
+                            { "content", "record"},
+                            { "format", "xml" },
+                            { "type", "flat"},
+                            { "overwriteBehavior", "overwrite" },
+                            { "data", ConstructResponse(mId, values) },
+                            { "returnContent", "count" },
+                            { "returnFormat", "json" }
+                        };
+
+                var encodedContent = new FormUrlEncodedContent(parameters);
+
+                var resp = await httpClient.PostAsync(new Uri(App.ApiAddress), encodedContent);
+
+                string returnStatment = "";
+
+                if (resp.IsSuccessStatusCode)
+                {
+                    returnStatment = await resp.Content.ReadAsStringAsync();
+
+                    tcs.SetResult(returnStatment);
+                }
+                else
+                {
+                    tcs.SetResult(returnStatment);
+                }
+            }
+            catch
+            {
+                tcs.SetResult("");
+            }
+
+            return await tcs.Task;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        private static string ConstructResponse(string id, double[] values)
+        {
+            string temp;
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
+            sb.Append("<records>");
+            sb.Append("<item>");
+            sb.Append("<record_id>");
+            sb.Append(id);
+            sb.Append("</record_id>");
+
+            for (int i = 0; i < 8; i++)
+            {
+                temp = string.Format("<{0}>{1}</{0}>",
+                    "delay_" + (i + 1),
+                    values[i]);
+
+                sb.Append(temp);
+            }
+
+
+            sb.Append("</item>");
+            sb.Append("</records>");
+
+            return sb.ToString();
+        }
+
+        private bool ValidateResponseString(string resp)
+        {
+            return (resp.Trim().Equals("{\"count\": 1}"));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void StartControlButton_Clicked(object sender, EventArgs e)
+        private async void StartControlButton_Clicked(object sender, EventArgs e)
         {
+            string ans = await ValidateSuppliedCredentials();
+
+            Debug.WriteLine(ValidateResponseString(ans));
+
+            return;
+
             var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
 
             if (account != null)
@@ -195,7 +335,7 @@ namespace CaregiverSurveyApp.Layers
                 Device.BeginInvokeOnMainThread(async () =>
                 {
                     await App.Current.MainPage.DisplayAlert("Error", "No credentials found", "Cancel");
-                });                
+                });
             }
         }
     }
