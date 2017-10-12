@@ -22,10 +22,10 @@ namespace CaregiverSurveyApp.Droid.Implementation
                                                                  ViewGroup.LayoutParams.WrapContent)
             };
 
-            var edit = new EditText(Forms.Context) { Text = popup.Text };
+            var edit = new EditText(Forms.Context) { Text = "" };
             edit.InputType = Android.Text.InputTypes.TextFlagCapWords;
 
-            var edit2 = new EditText(Forms.Context) { Text = popup.Text2 };
+            var edit2 = new EditText(Forms.Context) { Text = "" };
             edit2.InputType = Android.Text.InputTypes.TextFlagCapWords;
 
             layout.AddView(edit, 

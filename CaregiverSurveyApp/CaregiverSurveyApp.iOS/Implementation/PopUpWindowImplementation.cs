@@ -16,7 +16,7 @@ namespace CaregiverSurveyApp.iOS.Implementation
             var alert = new UIAlertView
             {
                 Title = popup.Title,
-                Message = popup.Text,
+                Message = "",
                 AlertViewStyle = UIAlertViewStyle.LoginAndPasswordInput,
             };
 
