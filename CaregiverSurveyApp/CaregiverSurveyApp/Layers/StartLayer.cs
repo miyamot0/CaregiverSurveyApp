@@ -25,9 +25,15 @@ namespace CaregiverSurveyApp.Layers
                        startButton;
 
         CCLabel statusLabel,
-                startLabel;
+                startLabel,
+                credentialLabel;
 
         int paddingTop = 0;
+
+        private float Height,
+                      Width;
+
+        private bool Ready = false;
 
         private CCSpriteSheet spriteSheet;
 
@@ -39,6 +45,8 @@ namespace CaregiverSurveyApp.Layers
         public StartLayer(int width, int height) : base(CCColor4B.AliceBlue)
         {
             Color = Constants.midBlue;
+            Height = height;
+            Width = width;
 
             spriteSheet = new CCSpriteSheet("static.plist");
 
@@ -47,32 +55,147 @@ namespace CaregiverSurveyApp.Layers
 #endif
 
             statusButton = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("Green")));
-            statusButton.ContentSize = new CCSize(width / 4, height / 8);
+            statusButton.ContentSize = new CCSize(Width / 4, Height / 8);
 
             statusLabel = new CCLabel("Settings", Constants.LabelFont, Constants.ButtonNormal, CCLabelFormat.SystemFont);
             statusLabel.Color = CCColor3B.Black;
 
             statusControlButton = new CCControlButton(statusLabel, statusButton);
-            statusControlButton.PositionX = width - statusControlButton.ContentSize.Width / 2 - Constants.hOffset;
-            statusControlButton.PositionY = height - statusControlButton.ContentSize.Height / 2 - Constants.vOffset - paddingTop;
+            statusControlButton.PositionX = Width - statusControlButton.ContentSize.Width / 2 - Constants.hOffset;
+            statusControlButton.PositionY = Height - statusControlButton.ContentSize.Height / 2 - Constants.vOffset - paddingTop;
             statusControlButton.AnchorPoint = CCPoint.AnchorMiddle;
             statusControlButton.Clicked += StatusControlButton_Clicked;
 
             AddChild(statusControlButton);
 
             startButton = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("Blue")), new CCRect(10, 10, 10, 10));
-            startButton.ContentSize = new CCSize(width / 2, height / 4);
+            startButton.ContentSize = new CCSize(Width / 2, Height / 4);
 
             startLabel = new CCLabel("Begin Survey", Constants.LabelFont, Constants.ButtonStart, CCLabelFormat.SystemFont);
             startLabel.Color = CCColor3B.Black;
 
             startControlButton = new CCControlButton(startLabel, startButton);
-            startControlButton.PositionX = width / 2 - Constants.hOffset;
+            startControlButton.PositionX = Width / 2 - Constants.hOffset;
             startControlButton.PositionY = startControlButton.ContentSize.Height / 2 + (Constants.vOffset * 3);
             startControlButton.AnchorPoint = CCPoint.AnchorMiddle;
             startControlButton.Clicked += StartControlButton_Clicked;
 
             AddChild(startControlButton);
+
+            credentialLabel = new CCLabel("Status: Checking...", Constants.LabelFont, Constants.ButtonNormal, CCLabelFormat.SystemFont);
+            credentialLabel.PositionX = credentialLabel.ContentSize.Width / 2 + Constants.hOffset;
+            credentialLabel.Color = CCColor3B.Red;
+            credentialLabel.PositionY = Height - credentialLabel.ContentSize.Height / 2 - Constants.vOffset - paddingTop;
+            credentialLabel.AnchorPoint = CCPoint.AnchorMiddle;
+
+            AddChild(credentialLabel);
+
+            // Begin startup check
+            UpdateStatus();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private async void UpdateStatus()
+        {
+            string statusText = await ChallengeCredentials();
+
+            UpdateLabelText(statusText);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="text"></param>
+        private void UpdateLabelText(string text)
+        {
+            ScheduleOnce((dt) =>
+            {
+                Ready = (text.Trim().Equals("Status: Ready."));
+
+                credentialLabel.Text = text;
+                credentialLabel.PositionX = credentialLabel.ContentSize.Width / 2 + Constants.hOffset;
+                credentialLabel.Color = (Ready) ? CCColor3B.Black : CCColor3B.Red;
+            }, 0f);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private Task<string> ChallengeCredentials()
+        {
+            TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
+
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                using (var progress = UserDialogs.Instance.Loading("Checking credentials ...", null, null, true, MaskType.Black))
+                {
+                    progress.Title = "Checking for credentials...";
+
+                    var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
+
+                    if (account != null)
+                    {
+                        if (CheckAccountContent())
+                        {
+                            string result = await await TestServerCredentials(account.Properties["Server"],
+                                            account.Properties["Key"],
+                                            account.Properties["DeviceName"]).ContinueWith(async t => await CloseUserDialog(t.Result));
+
+                            if (ValidateResponseString(result))
+                            {
+                                App.Token = account.Properties["Key"];
+                                App.ApiAddress = account.Properties["Server"];
+                                App.DeviceName = account.Properties["DeviceName"];
+
+                                tcs.SetResult("Status: Ready.");
+                            }
+                            else
+                            {
+                                tcs.SetResult("Status: Auth failed.");
+                            }
+                        }
+                        else
+                        {
+                            tcs.SetResult("Status: Credentials Empty.");
+                        }
+                    }
+                    else
+                    {
+                        tcs.SetResult("Status: No Credentials Found.");
+                    }
+                }
+                //UserDialogs.Instance.ShowLoading("Checking credentials ...", MaskType.Black);
+            });
+
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Check if anything is there
+        /// </summary>
+        /// <returns></returns>
+        private bool CheckAccountContent()
+        {
+            var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
+
+            if (account != null)
+            {
+                if (string.IsNullOrWhiteSpace(account.Properties["Key"]) ||
+                    string.IsNullOrWhiteSpace(account.Properties["Server"]) ||
+                    string.IsNullOrWhiteSpace(account.Properties["DeviceName"]))
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -99,10 +222,14 @@ namespace CaregiverSurveyApp.Layers
                         var result = await TextInputWindow("What are your credentials?");
 
                         SaveCredentials(result[0], result[1], id);
+
+                        UpdateLabelText(await ChallengeCredentials());
                     }
                     else if (action != null && action == "Delete Credentials")
                     {
                         AccountStore.Create().Delete(account, App.AppName);
+
+                        UpdateLabelText("Status: Credentials Deleted");
                     }
                 }
                 else
@@ -125,8 +252,6 @@ namespace CaregiverSurveyApp.Layers
             {
                 string ans = await ValidateSuppliedCredentials(Server, Key, Id);
 
-                Debug.WriteLine(ans);
-
                 if (ValidateResponseString(ans))
                 {
                     Account account = new Account
@@ -138,10 +263,14 @@ namespace CaregiverSurveyApp.Layers
                     account.Properties.Add("DeviceName", Id);
                     AccountStore.Create().Save(account, App.AppName);
 
+                    UpdateLabelText("Status: Ready.");
+
                     await App.Current.MainPage.DisplayAlert("Credentials accepted", "Credentials are stored and ready", "Close");
                 }
                 else
                 {
+                    UpdateLabelText("Status: Credentials failed.");
+
                     await App.Current.MainPage.DisplayAlert("Incorrect credentials", "Credentials were not correct", "Close");
                 }
             }
@@ -317,16 +446,14 @@ namespace CaregiverSurveyApp.Layers
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void StartControlButton_Clicked(object sender, EventArgs e)
+        private void StartControlButton_Clicked(object sender, EventArgs e)
         {
             var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
 
             if (account != null)
             {
-                if (string.IsNullOrWhiteSpace(account.Properties["Key"]) ||
-                    string.IsNullOrWhiteSpace(account.Properties["Server"]) ||
-                    string.IsNullOrWhiteSpace(account.Properties["DeviceName"]))
-                {
+                if (CheckAccountContent())
+                {                
                     Device.BeginInvokeOnMainThread(async () =>
                     {
                         await App.Current.MainPage.DisplayAlert("Error", "Invalid credentials found", "Cancel");
