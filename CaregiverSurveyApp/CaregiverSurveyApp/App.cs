@@ -6,6 +6,7 @@ namespace CaregiverSurveyApp
 {
     public class App : Application
     {
+        public static string AppName = "com.smallnstats.caregiversurveyapp";
         public static string Token = Credentials.Token;
         public static string ApiAddress = Credentials.Address;
         public static string DeviceName = "DebugDevice";

@@ -6,6 +6,8 @@ using Xamarin.Forms;
 using CaregiverSurveyApp.Views;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Xamarin.Auth;
+using System.Linq;
 
 namespace CaregiverSurveyApp.Layers
 {
@@ -77,11 +79,53 @@ namespace CaregiverSurveyApp.Layers
         {
             Device.BeginInvokeOnMainThread(async () =>
             {
-                var result = await TextInputWindow("What are your credentials?");
+                var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
 
-                Debug.WriteLine(result);
+                if (account != null)
+                {
+                    var action = await App.Current.MainPage.DisplayActionSheet("Existing credentials found", "Cancel", null, "Modify Credentials", "Delete Credentials");
+                    
+                    if (action != null && action == "Modify Credentials")
+                    {
+                        AccountStore.Create().Delete(account, App.AppName);
+
+                        var result = await TextInputWindow("What are your credentials?");
+
+                        SaveCredentials(result[0], result[1]);
+                    }
+                    else if (action != null && action == "Delete Credentials")
+                    {
+                        AccountStore.Create().Delete(account, App.AppName);
+                    }
+                }
+                else
+                {
+                    var result = await TextInputWindow("What are your credentials?");
+
+                    SaveCredentials(result[0], result[1]);
+                }
 
             });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Server"></param>
+        /// <param name="Key"></param>
+        private void SaveCredentials(string Server, string Key)
+        {
+            if (!string.IsNullOrWhiteSpace(Server) && !string.IsNullOrWhiteSpace(Key))
+            {
+                Account account = new Account
+                {
+                    Username = App.AppName
+                };
+                account.Properties.Add("Server", Server);
+                account.Properties.Add("Key", Key);
+                account.Properties.Add("DeviceName", Guid.NewGuid().ToString());
+                AccountStore.Create().Save(account, App.AppName);
+            }
         }
 
         /// <summary>
@@ -121,7 +165,37 @@ namespace CaregiverSurveyApp.Layers
         /// <param name="e"></param>
         private void StartControlButton_Clicked(object sender, EventArgs e)
         {
-            GameView.Director.PushScene(new CCTransitionFade(1.5f, new DemoScene(GameView, this.Scene)));
+            var account = AccountStore.Create().FindAccountsForService(App.AppName).FirstOrDefault();
+
+            if (account != null)
+            {
+                if (String.IsNullOrWhiteSpace(account.Properties["Key"]) || 
+                    String.IsNullOrWhiteSpace(account.Properties["Server"]) ||
+                    String.IsNullOrWhiteSpace(account.Properties["DeviceName"]))
+                {
+                    Device.BeginInvokeOnMainThread(async () =>
+                    {
+                        await App.Current.MainPage.DisplayAlert("Error", "Invalid credentials found", "Cancel");
+                    });
+
+                    return;
+                }
+                else
+                {
+                    App.Token = account.Properties["Key"];
+                    App.ApiAddress = account.Properties["Server"];
+                    App.DeviceName = account.Properties["DeviceName"];
+
+                    GameView.Director.PushScene(new CCTransitionFade(1.5f, new DemoScene(GameView, this.Scene)));
+                }
+            }
+            else
+            {
+                Device.BeginInvokeOnMainThread(async () =>
+                {
+                    await App.Current.MainPage.DisplayAlert("Error", "No credentials found", "Cancel");
+                });                
+            }
         }
     }
 }
