@@ -513,8 +513,6 @@ namespace CaregiverSurveyApp.Layers
             sb.Append("</item>");
             sb.Append("</records>");
 
-            System.Diagnostics.Debug.WriteLine(sb.ToString());
-
             return sb.ToString();
         }
 
@@ -530,21 +528,14 @@ namespace CaregiverSurveyApp.Layers
             {
                 using (var progress = UserDialogs.Instance.Loading("Saving data ...", null, null, true, MaskType.Black))
                 {
-                    bool result = await SendDataToServer();
+                    bool result = false;
 
-                    // Double check for sending
-                    if (!result)
+                    for (int i = 0; i < 10 && !result; i++)
                     {
                         result = await SendDataToServer();
-                    }
 
-                    // Triple check for sending
-                    if (!result)
-                    {
-                        result = await SendDataToServer();
+                        await Task.Delay(2000);
                     }
-
-                    await Task.Delay(2000);
 
                     tcs.SetResult(result);
                 }

@@ -123,7 +123,7 @@ namespace CaregiverSurveyApp.Layers
 
                     UpdateStatus();
                 }
-            }, 1f);
+            }, 3f);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace CaregiverSurveyApp.Layers
                 credentialLabel.Text = string.Format("{0} ({1})", text, App.SubmissionCounter);
                 credentialLabel.PositionX = credentialLabel.ContentSize.Width / 2 + Constants.hOffset;
                 credentialLabel.Color = (Ready) ? CCColor3B.Black : CCColor3B.Red;
-            }, 0f);
+            }, 0.1f);
         }
 
         /// <summary>
