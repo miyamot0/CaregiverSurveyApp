@@ -111,12 +111,25 @@ namespace CaregiverSurveyApp.Layers
 
             // Begin startup check
             UpdateStatus();
+
+            Schedule(t =>
+            {
+                if (App.UpdateValue)
+                {
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        App.UpdateValue = false;
+                    });
+
+                    UpdateStatus();
+                }
+            }, 1f);
         }
 
         /// <summary>
         /// Awaitable call to update the text
         /// </summary>
-        private async void UpdateStatus()
+        public async void UpdateStatus()
         {
             string statusText = await ChallengeCredentials();
 
@@ -133,7 +146,7 @@ namespace CaregiverSurveyApp.Layers
             {
                 Ready = (text.Trim().Equals("Status: Ready."));
 
-                credentialLabel.Text = text;
+                credentialLabel.Text = string.Format("{0} ({1})", text, App.SubmissionCounter);
                 credentialLabel.PositionX = credentialLabel.ContentSize.Width / 2 + Constants.hOffset;
                 credentialLabel.Color = (Ready) ? CCColor3B.Black : CCColor3B.Red;
             }, 0f);

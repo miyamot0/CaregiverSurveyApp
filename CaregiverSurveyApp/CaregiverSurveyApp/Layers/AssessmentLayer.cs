@@ -75,7 +75,7 @@ namespace CaregiverSurveyApp.Layers
             priorAdjustment = 0;
 
         /// <summary>
-        /// 
+        /// Constructor
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
@@ -565,6 +565,8 @@ namespace CaregiverSurveyApp.Layers
             {
                 if ((Scene as AssessmentScene) != null)
                 {
+                    App.UpdateValue = true;
+
                     (Scene as AssessmentScene).PopBackHome();
                 }
             }

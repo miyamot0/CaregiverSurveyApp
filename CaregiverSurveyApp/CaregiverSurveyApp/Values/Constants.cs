@@ -47,8 +47,8 @@ namespace CaregiverSurveyApp.Values
             "In this task, we ask that you make choices by dragging the option you would rather into the bottom portion of the screen. " +
             "To practice this, please put the choice you want into the bottom box below.";
 
-        public static string demoTextSsr = "Choice I Want";
-        public static string demoTextLlr = "Choice I Do notWant";
+        public static string demoTextSsr = "Choice I want";
+        public static string demoTextLlr = "Choice I do notwant";
 
         public static string assessmentInstruction = "Now or in {0}";
 

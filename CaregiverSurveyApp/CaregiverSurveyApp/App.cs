@@ -61,6 +61,7 @@ namespace CaregiverSurveyApp
         public static string Token = "";
         public static string ApiAddress = "";
         public static string DeviceName = "";
+        public static bool UpdateValue = false;
 
         /// <summary>
         /// 
