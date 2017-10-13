@@ -81,8 +81,6 @@ namespace CaregiverSurveyApp.Values
             Text = 3
         }
 
-        public static int PaddingTop = 25;
-
         public static float ButtonNormal = 40f;
         public static float ButtonStart = 96f;
 

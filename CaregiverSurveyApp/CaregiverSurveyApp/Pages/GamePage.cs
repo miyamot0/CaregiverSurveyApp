@@ -45,6 +45,21 @@ namespace CaregiverSurveyApp.Pages
 
             Content = grid;
 
+            double padding = 0.0;
+
+            switch (Device.RuntimePlatform)
+            {
+                case Device.iOS:
+                    padding = 20;
+                    break;
+
+                case Device.Android:
+                    padding = 0;
+                    break;
+            }
+
+            Padding = new Thickness(0, padding, 0, 0);
+
             grid.RowDefinitions = new RowDefinitionCollection {
                 new RowDefinition
                 {

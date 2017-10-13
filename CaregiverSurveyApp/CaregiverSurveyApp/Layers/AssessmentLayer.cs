@@ -72,8 +72,7 @@ namespace CaregiverSurveyApp.Layers
             LLRValue = 100,
             delayIncrement = 0,
             valueIncrement = 0,
-            priorAdjustment = 0,
-            paddingTop = 0;
+            priorAdjustment = 0;
 
         /// <summary>
         /// 
@@ -85,10 +84,6 @@ namespace CaregiverSurveyApp.Layers
             Color = Constants.midBlue;
 
             spriteSheet = new CCSpriteSheet("static.plist");
-
-#if (__IOS__)
-            paddingTop = Constants.PaddingTop;
-#endif
 
             Width = width;
             Height = height;
@@ -104,7 +99,7 @@ namespace CaregiverSurveyApp.Layers
 
             backControlButton = new CCControlButton(backLabel, backButton);
             backControlButton.PositionX = Constants.hOffset;
-            backControlButton.PositionY = height - backControlButton.ContentSize.Height / 2 - Constants.vOffset - paddingTop;
+            backControlButton.PositionY = height - backControlButton.ContentSize.Height / 2 - Constants.vOffset;
             backControlButton.AnchorPoint = CCPoint.AnchorMiddleLeft;
             backControlButton.Clicked += BackControlButton_Clicked;
 
@@ -116,7 +111,7 @@ namespace CaregiverSurveyApp.Layers
                 CCLabelFormat.SystemFont);
             titleLabel.Color = CCColor3B.Black;
             titleLabel.PositionX = width / 2;
-            titleLabel.PositionY = height - paddingTop - Constants.vOffset * 2 - backControlButton.ContentSize.Height;
+            titleLabel.PositionY = height - Constants.vOffset * 2 - backControlButton.ContentSize.Height;
             titleLabel.AnchorPoint = CCPoint.AnchorMiddleTop;
             titleLabel.Tag = (int)Constants.SpriteTags.None;
 
@@ -140,7 +135,7 @@ namespace CaregiverSurveyApp.Layers
             instructionLabel.ContentSize = new CCSize(width - Constants.hOffset * 2, height / 4);
             instructionLabel.LineBreak = CCLabelLineBreak.Word;
             instructionLabel.PositionX = Constants.hOffset;
-            instructionLabel.PositionY = height - paddingTop - backButton.ContentSize.Height - titleLabel.ContentSize.Height - Constants.vOffset * 3;
+            instructionLabel.PositionY = height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - Constants.vOffset * 3;
             instructionLabel.AnchorPoint = CCPoint.AnchorUpperLeft;
             instructionLabel.Tag = (int)Constants.SpriteTags.None;
 
@@ -159,7 +154,6 @@ namespace CaregiverSurveyApp.Layers
             llrCard.ContentSize = new CCSize(width / 3 - Constants.hOffset * 2, width / 3 - Constants.hOffset * 2);
             llrCard.PositionX = width - Constants.hOffset * 3 - (width / 3 - Constants.hOffset * 2) / 2;
             llrCard.PositionY = height -
-                                paddingTop -
                                 backButton.ContentSize.Height -
                                 titleLabel.ContentSize.Height -
                                 instructionLabel.ContentSize.Height -
@@ -190,7 +184,6 @@ namespace CaregiverSurveyApp.Layers
             ssrCard.ContentSize = new CCSize(width / 3 - Constants.hOffset * 2, width / 3 - Constants.hOffset * 2);
             ssrCard.PositionX = Constants.hOffset * 3 + (width / 3 - Constants.hOffset * 2) / 2;
             ssrCard.PositionY = height -
-                                paddingTop -
                                 backButton.ContentSize.Height -
                                 titleLabel.ContentSize.Height -
                                 instructionLabel.ContentSize.Height -
@@ -588,7 +581,7 @@ namespace CaregiverSurveyApp.Layers
         CCPoint GetLeftPosition()
         {
             return new CCPoint(Constants.hOffset * 3 + (Width / 3 - Constants.hOffset * 2) / 2,
-                    Height - paddingTop - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height - ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
+                    Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height - ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
         }
 
         /// <summary>
@@ -598,7 +591,7 @@ namespace CaregiverSurveyApp.Layers
         CCPoint GetRightPosition()
         {
             return new CCPoint(Width - Constants.hOffset * 3 - (Width / 3 - Constants.hOffset * 2) / 2,
-                    Height - paddingTop - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height - ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
+                    Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height - ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
         }
 
         /// <summary>

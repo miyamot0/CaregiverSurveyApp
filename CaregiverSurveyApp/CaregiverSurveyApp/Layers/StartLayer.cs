@@ -54,8 +54,6 @@ namespace CaregiverSurveyApp.Layers
                 startLabel,
                 credentialLabel;
 
-        int paddingTop = 0;
-
         private float Height,
                       Width;
 
@@ -76,10 +74,6 @@ namespace CaregiverSurveyApp.Layers
 
             spriteSheet = new CCSpriteSheet("static.plist");
 
-#if (__IOS__)
-            paddingTop = Constants.PaddingTop;
-#endif
-
             statusButton = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("Green")));
             statusButton.ContentSize = new CCSize(Width / 4, Height / 8);
 
@@ -88,7 +82,7 @@ namespace CaregiverSurveyApp.Layers
 
             statusControlButton = new CCControlButton(statusLabel, statusButton);
             statusControlButton.PositionX = Width - statusControlButton.ContentSize.Width / 2 - Constants.hOffset;
-            statusControlButton.PositionY = Height - statusControlButton.ContentSize.Height / 2 - Constants.vOffset - paddingTop;
+            statusControlButton.PositionY = Height - statusControlButton.ContentSize.Height / 2 - Constants.vOffset;
             statusControlButton.AnchorPoint = CCPoint.AnchorMiddle;
             statusControlButton.Clicked += StatusControlButton_Clicked;
 
@@ -111,7 +105,7 @@ namespace CaregiverSurveyApp.Layers
             credentialLabel = new CCLabel("Status: Checking...", Constants.LabelFont, Constants.ButtonNormal, CCLabelFormat.SystemFont);
             credentialLabel.PositionX = credentialLabel.ContentSize.Width / 2 + Constants.hOffset;
             credentialLabel.Color = CCColor3B.Red;
-            credentialLabel.PositionY = Height - credentialLabel.ContentSize.Height / 2 - Constants.vOffset - paddingTop;
+            credentialLabel.PositionY = Height - credentialLabel.ContentSize.Height / 2 - Constants.vOffset;
             credentialLabel.AnchorPoint = CCPoint.AnchorMiddle;
 
             AddChild(credentialLabel);
