@@ -30,7 +30,6 @@ using CaregiverSurveyApp.Scenes;
 using CaregiverSurveyApp.Values;
 using System;
 using Xamarin.Forms;
-using CaregiverSurveyApp.Views;
 using System.Threading.Tasks;
 using Xamarin.Auth;
 using System.Linq;
@@ -275,22 +274,25 @@ namespace CaregiverSurveyApp.Layers
         {
             TaskCompletionSource<string[]> tcs = new TaskCompletionSource<string[]>();
 
-            Device.BeginInvokeOnMainThread(() =>
+            Device.BeginInvokeOnMainThread(async () =>
             {
-                var popup = new PopUpWindow(query, string.Empty, "OK", "Cancel");
-                popup.PopupClosed += (o, closedArgs) =>
+                var login = await UserDialogs.Instance.LoginAsync(new LoginConfig
                 {
-                    if (closedArgs.Button == "OK" && closedArgs.Text.Trim().Length > 0)
-                    {
-                        tcs.SetResult(new string[] { closedArgs.Text.Trim(), closedArgs.Text2.Trim() });
-                    }
-                    else
-                    {
-                        tcs.SetResult(new string[] { "", "" });
-                    }
-                };
+                    Message = "Enter your credentials",
+                    OkText = "Ok",
+                    CancelText = "Cancel",
+                    LoginPlaceholder = "Server",
+                    PasswordPlaceholder = "Key",                    
+                });
 
-                popup.Show();
+                if (login.Ok)
+                {
+                    tcs.SetResult(new string[] { login.LoginText, login.Password });
+                }
+                else
+                {
+                    tcs.SetResult(new string[] { "", "" });
+                }
             });
 
             return tcs.Task;

@@ -95,7 +95,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Helpers\Settings.cs" />
-    <Compile Include="Implementation\PopUpWindowImplementation.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
     <BundleResource Include="Content\Sounds\Success.xnb" />

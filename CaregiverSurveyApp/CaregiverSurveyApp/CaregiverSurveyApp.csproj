@@ -43,7 +43,6 @@
     <Compile Include="Extensions\CCScale9SpriteFile.cs" />
     <Compile Include="Extensions\CCScale9SpriteFrame.cs" />
     <Compile Include="Helpers\Settings.cs" />
-    <Compile Include="Interfaces\IPopUpWindow.cs" />
     <Compile Include="Layers\AssessmentLayer.cs" />
     <Compile Include="Layers\DemoLayer.cs" />
     <Compile Include="Layers\StartLayer.cs" />
@@ -54,7 +53,6 @@
     <Compile Include="Scenes\StartScene.cs" />
     <Compile Include="Scenes\TestScene.cs" />
     <Compile Include="Values\Constants.cs" />
-    <Compile Include="Views\PopUpWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Acr.UserDialogs, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
