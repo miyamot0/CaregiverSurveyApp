@@ -11,6 +11,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaregiverSurveyApp.iOS", "C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D4FB111F-0000-44C9-94FD-60E68C19D54C}"
 	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		LICENSE-ACRUserdialogs = LICENSE-ACRUserdialogs
+		LICENSE-Cocossharp = LICENSE-Cocossharp
+		LICENSE-ModernHTTPClient = LICENSE-ModernHTTPClient
+		LICENSE-Xamarin.Auth = LICENSE-Xamarin.Auth
+		LICENSE-Xamarin.Forms = LICENSE-Xamarin.Forms
+		LICENSE-Xamarin.Plugins = LICENSE-Xamarin.Plugins
 		README.md = README.md
 	EndProjectSection
 EndProject
