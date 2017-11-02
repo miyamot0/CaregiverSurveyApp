@@ -27,12 +27,7 @@
 
 using CocosSharp;
 using CaregiverSurveyApp.Values;
-using ModernHttpClient;
 using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 using Xamarin.Forms;
 using Acr.UserDialogs;
 using System.Diagnostics;
@@ -126,7 +121,10 @@ namespace CaregiverSurveyApp.Layers
             AddChild(bottomContainer, 0, (int)Constants.SpriteTags.None);
 
             // Instructions
-            instructionLabel = new CCLabel(Constants.assessmentInstruction, Constants.LabelFont, 26, CCLabelFormat.SystemFont);
+            instructionLabel = new CCLabel(String.Format(Constants.UserInstructionsByDelay, Constants.delayStrings[delayIncrement]), 
+                Constants.LabelFont, 
+                Constants.InstructionTextSize, 
+                CCLabelFormat.SystemFont);
             instructionLabel.Color = CCColor3B.Black;
             instructionLabel.Dimensions = new CCSize(App.Width - Constants.hOffset * 2, App.Height / 4);
             instructionLabel.ContentSize = new CCSize(App.Width - Constants.hOffset * 2, App.Height / 4);
@@ -263,7 +261,7 @@ namespace CaregiverSurveyApp.Layers
                 llrCard.Opacity = 255;
             }
 
-            if (CurrentSpriteTouched != null && CheckIfInDropBox(CurrentSpriteTouched))
+            if (CurrentSpriteTouched != null && CheckIfInDropBox())
             {
                 if (CurrentSpriteTouched.Tag == (int)Constants.SpriteTags.SSR)
                 {
@@ -274,7 +272,6 @@ namespace CaregiverSurveyApp.Layers
 
                             CCLabel mContent;
 
-                            // Update delay
                             if (valueIncrement >= 4)
                             {
                                 sendArray[delayIncrement] = SSRValue - (priorAdjustment / 2);
@@ -307,8 +304,14 @@ namespace CaregiverSurveyApp.Layers
                                 mContent2.Text = String.Format(Constants.assessmentTextLlr, Constants.delayStrings[delayIncrement]);
 
                                 titleLabel.Text = String.Format(Constants.assessmentInstruction, Constants.delayStrings[delayIncrement]);
+                                instructionLabel.Text = String.Format(Constants.UserInstructionsByDelay, Constants.delayStrings[delayIncrement]);
 
                                 CurrentSpriteTouched = null;
+
+                                RunAction(new CCTintTo(1.5f, 
+                                    Convert.ToByte(Constants.Colorings[delayIncrement][0]),
+                                    Convert.ToByte(Constants.Colorings[delayIncrement][1]),
+                                    Convert.ToByte(Constants.Colorings[delayIncrement][2])));
 
                                 return;
                             }
@@ -322,7 +325,7 @@ namespace CaregiverSurveyApp.Layers
 
                                 SSRValue = SSRValue - priorAdjustment;
 
-                                mContent.Text = String.Format(Constants.assessmentTextSsr, SSRValue);
+                                mContent.Text = String.Format(Constants.assessmentTextSsr, SSRValue);                               
                             }
                             else
                             {
@@ -331,7 +334,13 @@ namespace CaregiverSurveyApp.Layers
 
                                 SSRValue = SSRValue - priorAdjustment;
 
+                                SSRValue = (SSRValue > 100) ? 
+                                    100 : (SSRValue < 0) ? 
+                                    0 : SSRValue;
+
                                 mContent.Text = String.Format(Constants.assessmentTextSsr, SSRValue);
+
+                                //RunAction(new CCTintTo(1.5f, 0, 0, 0));
                             }
 
                             CurrentSpriteTouched = null;
@@ -341,7 +350,6 @@ namespace CaregiverSurveyApp.Layers
                 }
                 else if (CurrentSpriteTouched.Tag == (int)Constants.SpriteTags.LLR)
                 {
-
                     CCSequence iconAnimationFocus = new CCSequence(
                         new CCDelayTime(0.1f),
                         new CCMoveTo(0.5f, GetRightPosition()),
@@ -383,8 +391,14 @@ namespace CaregiverSurveyApp.Layers
                                 mContent2.Text = String.Format(Constants.assessmentTextLlr, Constants.delayStrings[delayIncrement]);
 
                                 titleLabel.Text = String.Format(Constants.assessmentInstruction, Constants.delayStrings[delayIncrement]);
+                                instructionLabel.Text = String.Format(Constants.UserInstructionsByDelay, Constants.delayStrings[delayIncrement]);
 
                                 CurrentSpriteTouched = null;
+
+                                RunAction(new CCTintTo(1.5f,
+                                    Convert.ToByte(Constants.Colorings[delayIncrement][0]),
+                                    Convert.ToByte(Constants.Colorings[delayIncrement][1]),
+                                    Convert.ToByte(Constants.Colorings[delayIncrement][2])));
 
                                 return;
                             }
@@ -420,104 +434,14 @@ namespace CaregiverSurveyApp.Layers
                     CurrentSpriteTouched.AddAction(iconAnimationFocus);
                 }
             }
-        }
-
-        /// <summary>
-        /// Sends to server
-        /// </summary>
-        /// <returns></returns>
-        public Task<bool> SendDataToServer()
-        {
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-
-            Device.BeginInvokeOnMainThread(async () =>
-            {
-                try
-                {
-                    var httpClient = new HttpClient(new NativeMessageHandler(
-                        throwOnCaptiveNetwork: true,
-                        customSSLVerification: true
-                    ));                                     
-
-                    var mId = string.Format("{0}-{1}",
-                        App.DeviceName,
-                        App.SubmissionCounter.ToString("0000000000"));
-
-                    var parameters = new Dictionary<string, string>
-                    {
-                        { "token", App.Token },
-                        { "content", "record"},
-                        { "format", "xml" },
-                        { "type", "flat"},
-                        { "overwriteBehavior", "normal" },
-                        { "data", ServerTools.ConstructResponse(mId, sendArray) },
-                        { "returnContent", "count" },
-                        { "returnFormat", "json" }
-                    };
-
-                    var encodedContent = new FormUrlEncodedContent(parameters);
-
-                    var resp = await httpClient.PostAsync(new Uri(App.ApiAddress), encodedContent);
-
-                    if (resp.IsSuccessStatusCode)
-                    {
-                        App.SubmissionCounter = App.SubmissionCounter + 1;
-
-                        Debug.WriteLineIf(App.Debugging, "Success Send: " + resp.Content.ReadAsStringAsync().Result);
-                        tcs.SetResult(true);
-                    }
-                    else 
-                    {
-                        Debug.WriteLineIf(App.Debugging, "Failed Send: " + resp.Content.ReadAsStringAsync().Result);
-                        tcs.SetResult(false);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLineIf(App.Debugging, "Catch: SendDataToServer = " + ex.ToString());
-                    tcs.SetResult(false);
-                }
-            });
-
-            return tcs.Task;
-        }
-        
-        /// <summary>
-        /// Upload task to REDcap
-        /// </summary>
-        /// <returns></returns>
-        private Task<bool> UploadData()
-        {
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-
-            Device.BeginInvokeOnMainThread(async () =>
-            {
-                using (var progress = UserDialogs.Instance.Loading("Saving data ...", null, null, true, MaskType.Black))
-                {
-                    bool result = false;
-
-                    for (int i = 0; i < App.RetrySendCount && !result; i++)
-                    {
-                        result = await SendDataToServer();
-
-                        await Task.Delay(5000);
-
-                        progress.Title = string.Format("Retry {0} of {0}", i + 1, App.RetrySendCount);
-                    }
-
-                    tcs.SetResult(result);
-                }
-            });
-
-            return tcs.Task;
-        }
+        }          
 
         /// <summary>
         /// Send data, return back to thread
         /// </summary>
         private async void SendData()
         {
-            bool finalResult = await UploadData();
+            bool finalResult = await ServerTools.UploadData(sendArray);
 
             if (finalResult && GameView.Director.CanPopScene)
             {
@@ -545,7 +469,7 @@ namespace CaregiverSurveyApp.Layers
         /// 
         /// </summary>
         /// <returns></returns>
-        CCPoint GetLeftPosition()
+        private CCPoint GetLeftPosition()
         {
             return new CCPoint(Constants.hOffset * 3 + (App.Height / 3 - Constants.hOffset * 2) / 2,
                     App.Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height - ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
@@ -555,7 +479,7 @@ namespace CaregiverSurveyApp.Layers
         /// 
         /// </summary>
         /// <returns></returns>
-        CCPoint GetRightPosition()
+        private CCPoint GetRightPosition()
         {
             return new CCPoint(App.Width - Constants.hOffset * 3 - (App.Width / 3 - Constants.hOffset * 2) / 2,
                     App.Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height - ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
@@ -598,7 +522,7 @@ namespace CaregiverSurveyApp.Layers
         /// <param name="pos"></param>
         /// <param name="CurrentSpriteTouched"></param>
         /// <returns></returns>
-        bool CheckIfInDropBox(CCScale9Sprite CurrentSpriteTouched)
+        bool CheckIfInDropBox()
         {
             if (CurrentSpriteTouched.Position.Y > 0 &&
                 CurrentSpriteTouched.Position.Y < (((App.Height / 3) + Constants.vOffset) - CurrentSpriteTouched.ContentSize.Height / 2))

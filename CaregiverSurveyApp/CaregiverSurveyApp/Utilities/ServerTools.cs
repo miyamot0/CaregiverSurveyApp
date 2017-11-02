@@ -2,6 +2,7 @@
 using ModernHttpClient;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -142,7 +143,7 @@ namespace CaregiverSurveyApp.Utilities
         /// </summary>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static Task<string> CloseUserDialog(string b)
+        static Task<string> CloseUserDialog(string b)
         {
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
@@ -160,7 +161,7 @@ namespace CaregiverSurveyApp.Utilities
         /// 
         /// </summary>
         /// <returns></returns>
-        public static async Task<string> TestServerCredentials(string _address, string _key, string _id)
+        static async Task<string> TestServerCredentials(string _address, string _key, string _id)
         {
             TaskCompletionSource<string> tcs = new TaskCompletionSource<string>();
 
@@ -217,12 +218,102 @@ namespace CaregiverSurveyApp.Utilities
         }
 
         /// <summary>
+        /// Upload task to REDcap
+        /// </summary>
+        /// <returns></returns>
+        public static Task<bool> UploadData(double[] sendArray)
+        {
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                using (var progress = UserDialogs.Instance.Loading("Saving data ...", null, null, true, MaskType.Black))
+                {
+                    bool result = false;
+
+                    for (int i = 0; i < App.RetrySendCount && !result; i++)
+                    {
+                        result = await SendDataToServer(sendArray);
+
+                        await Task.Delay(5000);
+
+                        progress.Title = string.Format("Retry {0} of {0}", i + 1, App.RetrySendCount);
+                    }
+
+                    tcs.SetResult(result);
+                }
+            });
+
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Sends to server
+        /// </summary>
+        /// <returns></returns>
+        static Task<bool> SendDataToServer(double[] sendArray)
+        {
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                try
+                {
+                    var httpClient = new HttpClient(new NativeMessageHandler(
+                        throwOnCaptiveNetwork: true,
+                        customSSLVerification: true
+                    ));
+
+                    var mId = string.Format("{0}-{1}",
+                        App.DeviceName,
+                        App.SubmissionCounter.ToString("0000000000"));
+
+                    var parameters = new Dictionary<string, string>
+                    {
+                        { "token", App.Token },
+                        { "content", "record"},
+                        { "format", "xml" },
+                        { "type", "flat"},
+                        { "overwriteBehavior", "normal" },
+                        { "data", ServerTools.ConstructResponse(mId, sendArray) },
+                        { "returnContent", "count" },
+                        { "returnFormat", "json" }
+                    };
+
+                    var encodedContent = new FormUrlEncodedContent(parameters);
+
+                    var resp = await httpClient.PostAsync(new Uri(App.ApiAddress), encodedContent);
+
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        App.SubmissionCounter = App.SubmissionCounter + 1;
+
+                        Debug.WriteLineIf(App.Debugging, "Success Send: " + resp.Content.ReadAsStringAsync().Result);
+                        tcs.SetResult(true);
+                    }
+                    else
+                    {
+                        Debug.WriteLineIf(App.Debugging, "Failed Send: " + resp.Content.ReadAsStringAsync().Result);
+                        tcs.SetResult(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLineIf(App.Debugging, "Catch: SendDataToServer = " + ex.ToString());
+                    tcs.SetResult(false);
+                }
+            });
+
+            return tcs.Task;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public static string ConstructResponse(string id, double[] values)
+        static string ConstructResponse(string id, double[] values)
         {
             string temp;
             StringBuilder sb = new StringBuilder();

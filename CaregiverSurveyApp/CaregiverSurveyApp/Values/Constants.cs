@@ -26,6 +26,7 @@
 //----------------------------------------------------------------------------------------------
 
 using CocosSharp;
+using System.Collections.Generic;
 
 namespace CaregiverSurveyApp.Values
 {
@@ -47,6 +48,9 @@ namespace CaregiverSurveyApp.Values
             "In this task, we ask that you make choices by dragging the option you would rather into the bottom portion of the screen. " +
             "To practice this, please put the choice you want into the bottom box below.";
 
+        public static string UserInstructionsByDelay = "For this part, please make a choice of which type of outcome you'd prefer. That is, would you rather have a smaller improvements " +
+            "right away, but less long-term, or would you rather have larger improvements that you wouldn't see until {0}.";
+
         public static string demoTextSsr = "Choice I want";
         public static string demoTextLlr = "Choice I do notwant";
 
@@ -54,6 +58,19 @@ namespace CaregiverSurveyApp.Values
 
         public static string assessmentTextSsr = "I'd prefer to have {0}% less issues immediately.";
         public static string assessmentTextLlr = "I'd prefer to have 100% fewer issues in {0}";
+
+        public static List<int[]> Colorings = new List<int[]>()
+        {
+            new int[] { 166, 206, 227 },
+            new int[] { 31,  120, 180 },
+            new int[] { 178, 223, 138 },
+            new int[] { 51,  160, 44  },
+            new int[] { 251, 154, 153 },
+            new int[] { 227, 26,  28  },
+            new int[] { 253, 191, 111 },
+            new int[] { 255, 127, 0   },
+            new int[] { 202, 178, 214 }
+        };
 
         /// <summary>
         /// 
@@ -71,7 +88,7 @@ namespace CaregiverSurveyApp.Values
         };
 
         /// <summary>
-        /// 
+        /// Sprite types by Tag
         /// </summary>
         public enum SpriteTags
         {
