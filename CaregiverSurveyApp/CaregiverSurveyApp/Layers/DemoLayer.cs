@@ -58,9 +58,7 @@ namespace CaregiverSurveyApp.Layers
         CCEventListenerTouchOneByOne mListener;
 
         int CurrentSpriteType = -1,
-            choiceTrial = 1,
-            Width,
-            Height;
+            choiceTrial = 1;
 
         private CCSpriteSheet spriteSheet;
 
@@ -71,13 +69,13 @@ namespace CaregiverSurveyApp.Layers
         /// <param name="height"></param>
         public DemoLayer(int width, int height) : base(CCColor4B.AliceBlue)
         {
-            Color = Constants.midBlue;
-
+            App.AssessScene = new AssessmentScene(App.GameView);
             spriteSheet = new CCSpriteSheet("static.plist");
-            CCTextureCache.SharedTextureCache.AddImage("static.png");
 
-            Width = width;
-            Height = height;
+            CCTextureCache.SharedTextureCache.AddImage("static.png");
+            CCSprite starLoad = new CCSprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("HappyStar")).Texture);
+
+            Color = Constants.midBlue;
 
             // Top Bar
             backButton = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("Blue")));
@@ -200,7 +198,7 @@ namespace CaregiverSurveyApp.Layers
             AddEventListener(mListener.Copy(), ssrCard);
             AddChild(ssrCard, 1, (int)Constants.SpriteTags.SSR);
 
-            VisualEffect(new CCPoint(-Width, -Height));
+            VisualEffect(new CCPoint(-App.Width, -App.Height));
         }
 
         /// <summary>
@@ -332,11 +330,11 @@ namespace CaregiverSurveyApp.Layers
                         {
                             await App.Current.MainPage.DisplayAlert("Practice Tests Complete", "In the next part, you will be asked to choose between one outcome right away and another that would come later", "I'm Ready");
                         });
-                    }, GameView),
+                    }, App.GameView),
                     new CCCallFuncO((dt) =>
                     {
-                        GameView.Director.ReplaceScene(new CCTransitionFade(1.5f, new AssessmentScene(GameView, (Scene as DemoScene).HomeScene)));
-                    }, GameView)));
+                        GameView.Director.ReplaceScene(new CCTransitionFade(1.5f, App.AssessScene));
+                    }, App.GameView)));
             }
             else
             {
@@ -353,7 +351,7 @@ namespace CaregiverSurveyApp.Layers
 
                             ssrCard = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("White")));
                             ssrCard.CapInsets = new CCRect(20, 20, 20, 20);
-                            ssrCard.ContentSize = new CCSize(Width / 3 - Constants.hOffset * 2, Width / 3 - Constants.hOffset * 2);
+                            ssrCard.ContentSize = new CCSize(App.Width / 3 - Constants.hOffset * 2, App.Width / 3 - Constants.hOffset * 2);
                             ssrCard.PositionX = mNewLocation.X;
                             ssrCard.PositionY = mNewLocation.Y;
                             ssrCard.AnchorPoint = CCPoint.AnchorMiddle;
@@ -390,7 +388,7 @@ namespace CaregiverSurveyApp.Layers
 
                             ssrCard = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("White")));
                             ssrCard.CapInsets = new CCRect(20, 20, 20, 20);
-                            ssrCard.ContentSize = new CCSize(Width / 3 - Constants.hOffset * 2, Width / 3 - Constants.hOffset * 2);
+                            ssrCard.ContentSize = new CCSize(App.Width / 3 - Constants.hOffset * 2, App.Width / 3 - Constants.hOffset * 2);
                             ssrCard.PositionX = mNewLocation.X;
                             ssrCard.PositionY = mNewLocation.Y;
                             ssrCard.AnchorPoint = CCPoint.AnchorMiddle;
@@ -425,8 +423,8 @@ namespace CaregiverSurveyApp.Layers
         /// <returns></returns>
         CCPoint GetLeftPosition()
         {
-            return new CCPoint(Constants.hOffset * 3 + (Width / 3 - Constants.hOffset * 2) / 2,
-                    Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height -
+            return new CCPoint(Constants.hOffset * 3 + (App.Width / 3 - Constants.hOffset * 2) / 2,
+                    App.Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height -
                                 ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
         }
 
@@ -436,8 +434,8 @@ namespace CaregiverSurveyApp.Layers
         /// <returns></returns>
         CCPoint GetRightPosition()
         {
-            return new CCPoint(Width - Constants.hOffset * 3 - (Width / 3 - Constants.hOffset * 2) / 2,
-                    Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height -
+            return new CCPoint(App.Width - Constants.hOffset * 3 - (App.Width / 3 - Constants.hOffset * 2) / 2,
+                    App.Height - backButton.ContentSize.Height - titleLabel.ContentSize.Height - instructionLabel.ContentSize.Height -
                                 ssrCard.ContentSize.Height / 2 - Constants.vOffset * 3);
         }
 
@@ -489,12 +487,12 @@ namespace CaregiverSurveyApp.Layers
                     0 + CurrentSpriteTouched.ContentSize.Height / 2 :
                     pos.Y;
 
-                pos.X = (pos.X > Width - CurrentSpriteTouched.ContentSize.Width / 2) ?
-                    Width - CurrentSpriteTouched.ContentSize.Width / 2 :
+                pos.X = (pos.X > App.Width - CurrentSpriteTouched.ContentSize.Width / 2) ?
+                    App.Width - CurrentSpriteTouched.ContentSize.Width / 2 :
                     pos.X;
 
-                pos.Y = (pos.Y > Height - CurrentSpriteTouched.ContentSize.Height / 2) ?
-                    Height - CurrentSpriteTouched.ContentSize.Height / 2 :
+                pos.Y = (pos.Y > App.Height - CurrentSpriteTouched.ContentSize.Height / 2) ?
+                    App.Height - CurrentSpriteTouched.ContentSize.Height / 2 :
                     pos.Y;
 
                 CurrentSpriteTouched.Position = pos;
@@ -526,7 +524,7 @@ namespace CaregiverSurveyApp.Layers
         bool CheckIfInDropBox(CCScale9Sprite CurrentSpriteTouched)
         {
             if (CurrentSpriteTouched.Position.Y > 0 &&
-                CurrentSpriteTouched.Position.Y < (((Height / 3) + Constants.vOffset) - CurrentSpriteTouched.ContentSize.Height / 2))
+                CurrentSpriteTouched.Position.Y < (((App.Height / 3) + Constants.vOffset) - CurrentSpriteTouched.ContentSize.Height / 2))
             {
                 return true;
             }

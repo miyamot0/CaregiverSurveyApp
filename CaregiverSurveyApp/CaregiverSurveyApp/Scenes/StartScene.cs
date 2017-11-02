@@ -31,19 +31,22 @@ using CaregiverSurveyApp.Layers;
 namespace CaregiverSurveyApp.Scenes
 {
     /// <summary>
-    /// 
+    /// Staring Scene page
     /// </summary>
     public class StartScene : CCScene
     {
         CCLayer startLayer;
 
         /// <summary>
-        /// 
+        /// Ctor
         /// </summary>
         /// <param name="gameView"></param>
-        public StartScene(CCGameView gameView) : base(gameView)
+        public StartScene() : base(App.GameView)
         {
-            startLayer = new StartLayer(gameView.DesignResolution.Width, gameView.DesignResolution.Height);
+            App.Height = App.GameView.DesignResolution.Height;
+            App.Width = App.GameView.DesignResolution.Width;
+
+            startLayer = new StartLayer();
 
             AddLayer(startLayer);
         }

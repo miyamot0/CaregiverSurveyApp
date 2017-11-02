@@ -53,9 +53,6 @@ namespace CaregiverSurveyApp.Layers
                 startLabel,
                 credentialLabel;
 
-        private float Height,
-                      Width;
-
         private bool Ready = false;
 
         private CCSpriteSheet spriteSheet;
@@ -65,36 +62,34 @@ namespace CaregiverSurveyApp.Layers
         /// </summary>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        public StartLayer(int width, int height) : base(CCColor4B.AliceBlue)
+        public StartLayer() : base(CCColor4B.AliceBlue)
         {
             Color = Constants.midBlue;
-            Height = height;
-            Width = width;
 
             spriteSheet = new CCSpriteSheet("static.plist");
 
             statusButton = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("Green")));
-            statusButton.ContentSize = new CCSize(Width / 4, Height / 8);
+            statusButton.ContentSize = new CCSize(App.Width / 4, App.Height / 8);
 
             statusLabel = new CCLabel("Settings", Constants.LabelFont, Constants.ButtonNormal, CCLabelFormat.SystemFont);
             statusLabel.Color = CCColor3B.Black;
 
             statusControlButton = new CCControlButton(statusLabel, statusButton);
-            statusControlButton.PositionX = Width - statusControlButton.ContentSize.Width / 2 - Constants.hOffset;
-            statusControlButton.PositionY = Height - statusControlButton.ContentSize.Height / 2 - Constants.vOffset;
+            statusControlButton.PositionX = App.Width - statusControlButton.ContentSize.Width / 2 - Constants.hOffset;
+            statusControlButton.PositionY = App.Height - statusControlButton.ContentSize.Height / 2 - Constants.vOffset;
             statusControlButton.AnchorPoint = CCPoint.AnchorMiddle;
             statusControlButton.Clicked += StatusControlButton_Clicked;
 
             AddChild(statusControlButton);
 
             startButton = new CCScale9Sprite(spriteSheet.Frames.Find((x) => x.TextureFilename.Contains("Blue")), new CCRect(10, 10, 10, 10));
-            startButton.ContentSize = new CCSize(Width / 2, Height / 4);
+            startButton.ContentSize = new CCSize(App.Width / 2, App.Height / 4);
 
             startLabel = new CCLabel("Begin Survey", Constants.LabelFont, Constants.ButtonStart, CCLabelFormat.SystemFont);
             startLabel.Color = CCColor3B.Black;
 
             startControlButton = new CCControlButton(startLabel, startButton);
-            startControlButton.PositionX = Width / 2 - Constants.hOffset;
+            startControlButton.PositionX = App.Width / 2 - Constants.hOffset;
             startControlButton.PositionY = startControlButton.ContentSize.Height / 2 + (Constants.vOffset * 3);
             startControlButton.AnchorPoint = CCPoint.AnchorMiddle;
             startControlButton.Clicked += StartControlButton_Clicked;
@@ -104,7 +99,7 @@ namespace CaregiverSurveyApp.Layers
             credentialLabel = new CCLabel("Status: Checking...", Constants.LabelFont, Constants.ButtonNormal, CCLabelFormat.SystemFont);
             credentialLabel.PositionX = credentialLabel.ContentSize.Width / 2 + Constants.hOffset;
             credentialLabel.Color = CCColor3B.Red;
-            credentialLabel.PositionY = Height - credentialLabel.ContentSize.Height / 2 - Constants.vOffset;
+            credentialLabel.PositionY = App.Height - credentialLabel.ContentSize.Height / 2 - Constants.vOffset;
             credentialLabel.AnchorPoint = CCPoint.AnchorMiddle;
 
             AddChild(credentialLabel);
@@ -260,9 +255,11 @@ namespace CaregiverSurveyApp.Layers
                     {
                         Username = App.AppName
                     };
+
                     account.Properties.Add("Server", Server);
                     account.Properties.Add("Key", Key);
                     account.Properties.Add("DeviceName", Id);
+
                     AccountStore.Create().Save(account, App.AppName);
 
                     UpdateLabelText("Status: Ready.");
@@ -295,7 +292,7 @@ namespace CaregiverSurveyApp.Layers
                     OkText = "Ok",
                     CancelText = "Cancel",
                     LoginPlaceholder = "Server",
-                    PasswordPlaceholder = "Key",                    
+                    PasswordPlaceholder = "Key",
                 });
 
                 if (login.Ok)
@@ -449,7 +446,11 @@ namespace CaregiverSurveyApp.Layers
 
                 if (account != null)
                 {
-                    var action = await App.Current.MainPage.DisplayActionSheet("Existing credentials found", "Cancel", null, "Modify Credentials", "Delete Credentials");
+                    var action = await App.Current.MainPage.DisplayActionSheet("Existing credentials found",
+                        "Cancel",
+                        null,
+                        "Modify Credentials",
+                        "Delete Credentials");
 
                     if (action != null && action == "Modify Credentials")
                     {
@@ -464,6 +465,8 @@ namespace CaregiverSurveyApp.Layers
                     else if (action != null && action == "Delete Credentials")
                     {
                         AccountStore.Create().Delete(account, App.AppName);
+
+                        App.SubmissionCounter = 0;
 
                         UpdateLabelText("Status: Credentials Deleted");
                     }
@@ -486,7 +489,7 @@ namespace CaregiverSurveyApp.Layers
         {
             if (Ready)
             {
-                GameView.Director.PushScene(new CCTransitionFade(1.5f, new DemoScene(GameView, this.Scene)));
+                App.GameView.Director.PushScene(new CCTransitionFade(1.5f, new DemoScene()));
             }
             else
             {

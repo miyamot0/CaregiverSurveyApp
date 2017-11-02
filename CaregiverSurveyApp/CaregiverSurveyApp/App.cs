@@ -26,6 +26,8 @@
 //----------------------------------------------------------------------------------------------
 
 using CaregiverSurveyApp.Pages;
+using CaregiverSurveyApp.Scenes;
+using CocosSharp;
 using Plugin.Settings;
 using Plugin.Settings.Abstractions;
 using Xamarin.Forms;
@@ -34,6 +36,9 @@ namespace CaregiverSurveyApp
 {
     public class App : Application
     {
+        /// <summary>
+        /// App Settings
+        /// </summary>
         private static ISettings AppSettings
         {
             get
@@ -42,9 +47,15 @@ namespace CaregiverSurveyApp
             }
         }
 
+        /// <summary>
+        /// App Settings Key (submission count)
+        /// </summary>
         private const string IteratorKey = "iteration_count";
         private static readonly int IteratorDefault = 0;
 
+        /// <summary>
+        /// Submission Counter
+        /// </summary>
         public static int SubmissionCounter
         {
             get
@@ -61,10 +72,23 @@ namespace CaregiverSurveyApp
         public static string Token = "";
         public static string ApiAddress = "";
         public static string DeviceName = "";
+
         public static bool UpdateValue = false;
+        public static bool Debugging = true;
+
+        public static CCGameView GameView;
+        public static StartScene StartingScene;
+
+        public static AssessmentScene AssessScene;
+
+        public static int Height;
+        public static int Width;
+
+        // This is insane
+        public static int RetrySendCount = 100;
 
         /// <summary>
-        /// 
+        /// Main App
         /// </summary>
         public App()
         {

@@ -93,25 +93,24 @@ namespace CaregiverSurveyApp.Pages
         /// <param name="e"></param>
         void HandleViewCreated(object sender, EventArgs e)
         {
-            CCGameView gameView = sender as CCGameView;
+            App.GameView = sender as CCGameView;
 
-            if (gameView != null)
+            if (App.GameView != null)
             {
-                gameView.DesignResolution = gameView.ViewSize;
-
-                var contentSearchPaths = new List<string>()
+                App.GameView.DesignResolution = App.GameView.ViewSize;
+                App.GameView.ContentManager.SearchPaths = new List<string>()
                 {
                     "Sounds",
                     "Images"
                 };
 
-                gameView.ContentManager.SearchPaths = contentSearchPaths;
-
                 CCSprite.DefaultTexelToContentSizeRatio = 1.0f;
-                CCAudioEngine.SharedEngine.PreloadEffect("Sounds/Success");
 
-                StartScene mScene = new StartScene(gameView);
-                gameView.RunWithScene(mScene);
+                CCAudioEngine.SharedEngine.PreloadEffect("Sounds/Success");
+                // TODO: load stars?
+
+                App.StartingScene = new StartScene();
+                App.GameView.RunWithScene(App.StartingScene);
             }
         }
     }

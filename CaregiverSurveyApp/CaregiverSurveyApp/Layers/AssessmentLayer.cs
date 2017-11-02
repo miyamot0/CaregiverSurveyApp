@@ -26,7 +26,6 @@
 //----------------------------------------------------------------------------------------------
 
 using CocosSharp;
-using CaregiverSurveyApp.Scenes;
 using CaregiverSurveyApp.Values;
 using ModernHttpClient;
 using System;
@@ -45,6 +44,8 @@ namespace CaregiverSurveyApp.Layers
     /// </summary>
     public class AssessmentLayer : CCLayerColor
     {
+        // TODO: cascading values, check negs
+
         CCControlButton backControlButton;
 
         CCScale9Sprite backButton,
@@ -426,7 +427,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Sends to server
         /// </summary>
         /// <returns></returns>
         public Task<bool> SendDataToServer()
@@ -466,15 +467,18 @@ namespace CaregiverSurveyApp.Layers
                     {
                         App.SubmissionCounter = App.SubmissionCounter + 1;
 
+                        Debug.WriteLineIf(App.Debugging, "Success Send: " + resp.Content.ReadAsStringAsync().Result);
                         tcs.SetResult(true);
                     }
-                    else
+                    else 
                     {
+                        Debug.WriteLineIf(App.Debugging, "Failed Send: " + resp.Content.ReadAsStringAsync().Result);
                         tcs.SetResult(false);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Debug.WriteLineIf(App.Debugging, "Catch: SendDataToServer = " + ex.ToString());
                     tcs.SetResult(false);
                 }
             });
@@ -483,7 +487,7 @@ namespace CaregiverSurveyApp.Layers
         }
 
         /// <summary>
-        /// 
+        /// Constructs server readable response
         /// </summary>
         /// <param name="id"></param>
         /// <param name="values"></param>
@@ -530,17 +534,18 @@ namespace CaregiverSurveyApp.Layers
                 {
                     bool result = false;
 
-                    for (int i = 0; i < 10 && !result; i++)
+                    for (int i = 0; i < App.RetrySendCount && !result; i++)
                     {
                         result = await SendDataToServer();
 
-                        await Task.Delay(2000);
+                        await Task.Delay(5000);
+
+                        progress.Title = string.Format("Retry {0} of {0}", i + 1, App.RetrySendCount);
                     }
 
                     tcs.SetResult(result);
                 }
             });
-
 
             return tcs.Task;
         }
@@ -554,16 +559,23 @@ namespace CaregiverSurveyApp.Layers
 
             if (finalResult && GameView.Director.CanPopScene)
             {
-                if ((Scene as AssessmentScene) != null)
-                {
-                    App.UpdateValue = true;
-
-                    (Scene as AssessmentScene).PopBackHome();
-                }
+                App.UpdateValue = true;
+                App.AssessScene.PopBackHome();
             }
             else
             {
-                Debug.WriteLine("Failed");
+                Debug.WriteLineIf(App.Debugging, "Send attempts failed");
+
+                var confirm = await UserDialogs.Instance.ConfirmAsync("Do you want to try sending again?", "Send Failed", "Okay", "Discard Data", null);
+
+                if (confirm)
+                {
+                    SendData();
+                }
+                else
+                {
+                    App.AssessScene.PopBackHome();
+                }
             }
         }
 
@@ -642,12 +654,9 @@ namespace CaregiverSurveyApp.Layers
         /// <param name="e"></param>
         private void BackControlButton_Clicked(object sender, EventArgs e)
         {
-            if (GameView.Director.CanPopScene)
+            if (App.GameView.Director.CanPopScene)
             {
-                if ((Scene as AssessmentScene) != null)
-                {
-                    (Scene as AssessmentScene).PopBackHome();
-                }
+                App.AssessScene.PopBackHome();
             }
         }
     }
