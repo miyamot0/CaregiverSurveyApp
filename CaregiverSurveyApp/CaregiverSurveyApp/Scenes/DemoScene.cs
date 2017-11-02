@@ -35,8 +35,6 @@ namespace CaregiverSurveyApp.Scenes
     /// </summary>
     public class DemoScene : CCScene
     {
-        CCLayer demoLayer;
-
         /// <summary>
         /// 
         /// </summary>
@@ -44,9 +42,7 @@ namespace CaregiverSurveyApp.Scenes
         /// <param name="homeScene"></param>
         public DemoScene() : base(App.GameView)
         {
-            demoLayer = new DemoLayer(App.Width, App.Height);
-
-            AddLayer(demoLayer);
+            AddLayer(new DemoLayer(App.Width, App.Height));
         }
 
         /// <summary>

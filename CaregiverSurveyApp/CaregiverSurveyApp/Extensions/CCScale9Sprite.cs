@@ -19,11 +19,11 @@ namespace CocosSharp
 
         bool positionsAreDirty;
 
-#pragma warning disable 0169
+#pragma warning disable 0414
 
         bool opacityModifyRGB;
 
-#pragma warning restore 0169
+#pragma warning restore 0414
 
         bool spriteFrameRotated;
         bool spritesGenerated;

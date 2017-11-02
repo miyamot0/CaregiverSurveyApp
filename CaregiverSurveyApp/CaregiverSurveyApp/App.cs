@@ -77,8 +77,9 @@ namespace CaregiverSurveyApp
         public static bool Debugging = true;
 
         public static CCGameView GameView;
-        public static StartScene StartingScene;
 
+        public static StartScene StartingScene;
+        public static DemoScene DemonstrationScene;
         public static AssessmentScene AssessScene;
 
         public static int Height;

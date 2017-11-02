@@ -32,8 +32,6 @@ namespace CaregiverSurveyApp.Scenes
 {
     public class AssessmentScene : CCScene
     {
-        CCLayer assessmentLayer;
-
         /// <summary>
         /// 
         /// </summary>
@@ -41,9 +39,7 @@ namespace CaregiverSurveyApp.Scenes
         /// <param name="homeScene"></param>
         public AssessmentScene(CCGameView gameView) : base(gameView)
         {
-            assessmentLayer = new AssessmentLayer(App.Width, App.Height);
-
-            AddLayer(assessmentLayer);
+            AddLayer(new AssessmentLayer());
         }
 
         /// <summary>

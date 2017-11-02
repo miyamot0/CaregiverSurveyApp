@@ -51,6 +51,7 @@
     <Compile Include="Scenes\AssessmentScene.cs" />
     <Compile Include="Scenes\DemoScene.cs" />
     <Compile Include="Scenes\StartScene.cs" />
+    <Compile Include="Utilities\ServerTools.cs" />
     <Compile Include="Values\Constants.cs" />
   </ItemGroup>
   <ItemGroup>
